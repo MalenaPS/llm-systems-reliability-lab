@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import json
 import typer
 
 from llm_lab.schemas.export import export_output_schema
@@ -28,11 +29,32 @@ def schemas(out_dir: str = typer.Option("src/llm_lab/schemas")) -> None:
 
 
 @app.command()
-def demo(backend: str = typer.Option("mock"), model: str = typer.Option("mock")) -> None:
+def demo(
+    backend: str = typer.Option("mock"),
+    model: str = typer.Option("mock"),
+    case_id: str = typer.Option("c1"),
+) -> None:
     """
-    Demo stub. In later steps this will execute an end-to-end run and write artifacts to runs/<id>/.
+    Run an end-to-end demo and write artifacts to runs/<run_id>/.
     """
-    typer.echo(f"demo called: backend={backend} model={model}")
+    from llm_lab.pipeline.contracts import Case
+    from llm_lab.pipeline.sut import PipelineConfig, SUTPipeline
+
+    # Minimal case loader (MVP): pick from data/benchmarks/cases.jsonl by id
+    cases_path = Path("data") / "benchmarks" / "cases.jsonl"
+    rows = [json.loads(line) for line in cases_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    row = next((r for r in rows if r["case_id"] == case_id), None)
+    if row is None:
+        raise typer.BadParameter(f"Unknown case_id={case_id}")
+
+    case = Case(case_id=row["case_id"], prompt=row["prompt"], expected=row.get("expected", {}))
+
+    cfg = PipelineConfig(backend=backend, model=model)
+    pipe = SUTPipeline(cfg=cfg)
+    out, out_dir = pipe.run(case)
+
+    typer.echo(f"run_dir={out_dir}")
+    typer.echo(f"success={out.success} insufficient_evidence={out.insufficient_evidence}")
 
 
 if __name__ == "__main__":
