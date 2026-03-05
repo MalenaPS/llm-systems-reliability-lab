@@ -73,5 +73,33 @@ def eval(
     typer.echo(f"run_dir={out_dir}")
     typer.echo("wrote=reliability_report.json metrics.json")
 
+@app.command()
+def redteam(
+    config: str = typer.Option("configs/redteam_suite.yaml"),
+    backend: str = typer.Option("mock"),
+    model: str = typer.Option("mock"),
+) -> None:
+    """
+    Run the red team suite and write attack_report.json under runs/<id>/.
+    """
+    from llm_lab.redteam.runner import run_redteam_suite
+
+    out_dir = run_redteam_suite(Path(config), backend=backend, model=model)
+    typer.echo(f"run_dir={out_dir}")
+    typer.echo("wrote=attack_report.json")
+    
+@app.command()
+def drift(
+    matrix: str = typer.Option("configs/drift_matrix.yaml"),
+) -> None:
+    """
+    Run drift observatory and write drift_report.json + drift_report.md.
+    """
+    from llm_lab.drift.runner import run_drift
+
+    out_dir = run_drift(Path(matrix))
+    typer.echo(f"run_dir={out_dir}")
+    typer.echo("wrote=drift_report.json drift_report.md")
+
 if __name__ == "__main__":
     app()

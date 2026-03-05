@@ -39,7 +39,7 @@ class SUTPipeline:
         cfg: PipelineConfig | None = None,
     ):
         self.cfg = cfg or PipelineConfig()
-        self.llm = llm or MockLLM()
+        self.llm = llm or MockLLM(model=self.cfg.model)
         self.tools = tools or default_registry()
 
     def run(self, case: Case) -> tuple[Output, Path]:

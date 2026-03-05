@@ -1,0 +1,9 @@
+version: 1
+cases_path: data/benchmarks/cases.jsonl
+runs:
+  - id: baseline
+    backend: mock
+    model: mock-v1
+  - id: candidate
+    backend: mock
+    model: mock-v2
