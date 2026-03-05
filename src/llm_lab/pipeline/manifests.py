@@ -41,4 +41,6 @@ class RunManifest:
         }
 
     def write(self, path: Path) -> None:
-        path.write_text(json.dumps(self.to_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        path.write_text(
+            json.dumps(self.to_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )

@@ -20,7 +20,9 @@ class DriftDelta:
         }
 
 
-def compute_drift_report(baseline_metrics: dict[str, float], candidate_metrics: dict[str, float]) -> dict[str, Any]:
+def compute_drift_report(
+    baseline_metrics: dict[str, float], candidate_metrics: dict[str, float]
+) -> dict[str, Any]:
     keys = sorted(set(baseline_metrics.keys()) | set(candidate_metrics.keys()))
     deltas: list[DriftDelta] = []
     drift_score = 0.0

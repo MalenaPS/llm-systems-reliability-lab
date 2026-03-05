@@ -8,7 +8,6 @@ from rank_bm25 import BM25Okapi
 
 from llm_lab.pipeline.contracts import EvidenceChunk
 
-
 _WORD_RE = re.compile(r"[A-Za-z0-9_]+")
 
 

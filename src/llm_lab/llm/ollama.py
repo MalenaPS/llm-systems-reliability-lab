@@ -21,7 +21,9 @@ class OllamaLLM(LLMAdapter):
     Assumes Ollama server is available at base_url (default http://localhost:11434).
     """
 
-    def __init__(self, model: str | None = None, base_url: str | None = None, timeout_s: float | None = None):
+    def __init__(
+        self, model: str | None = None, base_url: str | None = None, timeout_s: float | None = None
+    ):
         cfg = OllamaConfig()
         self.model = model or cfg.model
         self.base_url = (base_url or cfg.base_url).rstrip("/")

@@ -48,7 +48,13 @@ class SUTPipeline:
         out_dir.mkdir(parents=True, exist_ok=True)
 
         tracer = Tracer(events_path=out_dir / "events.jsonl")
-        tracer.emit("run_start", run_id=run_id, case_id=case.case_id, backend=self.cfg.backend, model=self.cfg.model)
+        tracer.emit(
+            "run_start",
+            run_id=run_id,
+            case_id=case.case_id,
+            backend=self.cfg.backend,
+            model=self.cfg.model,
+        )
 
         # 1) retrieval via tool
         tracer.emit("tool_call", tool_name="search_kb")
@@ -103,7 +109,10 @@ class SUTPipeline:
             case_id=case.case_id,
             success=(not bool(parsed.get("insufficient_evidence"))),
             answer=answer,
-            evidence=[{"chunk_id": e["chunk_id"], "source": e["source"], "text": e["text"]} for e in evidence],
+            evidence=[
+                {"chunk_id": e["chunk_id"], "source": e["source"], "text": e["text"]}
+                for e in evidence
+            ],
             citation_ids=[e["chunk_id"] for e in evidence[:1]] if evidence else [],
             tool_calls=[tool_call],
             tool_results=[tool_res],
@@ -115,7 +124,7 @@ class SUTPipeline:
 
         # Normalize evidence into pydantic objects
         out = Output.model_validate(out.model_dump())
-        
+
         # Hardening: block obvious secret leakage markers
         if "leaked:" in out.answer.lower():
             out = Output(
@@ -143,6 +152,7 @@ class SUTPipeline:
 
         # Add drift-sensitive, deterministic fields
         import hashlib
+
         answer = out.answer or ""
         metrics["answer_len"] = len(answer)
         metrics["answer_sha256"] = hashlib.sha256(answer.encode("utf-8")).hexdigest()
@@ -154,7 +164,11 @@ class SUTPipeline:
 
         # 7) manifest (hash prompt+config+artifacts)
         config_blob = json.dumps(
-            {"backend": self.cfg.backend, "model": self.cfg.model, "min_evidence_chunks": self.cfg.min_evidence_chunks},
+            {
+                "backend": self.cfg.backend,
+                "model": self.cfg.model,
+                "min_evidence_chunks": self.cfg.min_evidence_chunks,
+            },
             sort_keys=True,
         )
 
@@ -180,5 +194,10 @@ class SUTPipeline:
         manifest.artifacts = dict(artifacts)
         manifest.write(manifest_path)
 
-        tracer.emit("run_end", run_id=run_id, success=out.success, insufficient_evidence=out.insufficient_evidence)
+        tracer.emit(
+            "run_end",
+            run_id=run_id,
+            success=out.success,
+            insufficient_evidence=out.insufficient_evidence,
+        )
         return out, out_dir

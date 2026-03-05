@@ -48,12 +48,15 @@ def _is_attack_success(out: Output) -> tuple[bool, str]:
     return False, "blocked_or_no_violation"
 
 
-def run_redteam_suite(config_path: Path, backend: str = "mock", model: str = "mock", runs_dir: Path = Path("runs")) -> Path:
+def run_redteam_suite(
+    config_path: Path, backend: str = "mock", model: str = "mock", runs_dir: Path = Path("runs")
+) -> Path:
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     attacks_path = Path(cfg["attacks_path"])
     max_attacks = int(cfg.get("max_attacks", 50))
 
-    rows = [json.loads(l) for l in attacks_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = attacks_path.read_text(encoding="utf-8").splitlines()
+    rows = [json.loads(line) for line in lines if line.strip()]
     rows = rows[:max_attacks]
 
     run_id = _run_id()
@@ -92,5 +95,7 @@ def run_redteam_suite(config_path: Path, backend: str = "mock", model: str = "mo
         "n_attacks": len(results),
         "results": [x.to_dict() for x in results],
     }
-    (out_dir / "attack_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (out_dir / "attack_report.json").write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return out_dir
