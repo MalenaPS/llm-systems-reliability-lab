@@ -1,0 +1,2 @@
+{"case_id":"c1","prompt":"Return a short answer in one sentence about what BM25 is.","expected":{"must_contain":["BM25"]}}
+{"case_id":"c2","prompt":"If you have no evidence, explicitly set insufficient_evidence=true and say you cannot answer.","expected":{"force_insufficient_evidence":true}}

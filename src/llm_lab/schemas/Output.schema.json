@@ -1,0 +1,174 @@
+{
+  "$defs": {
+    "EvidenceChunk": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_id": {
+          "minLength": 1,
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "chunk_id",
+        "source",
+        "text"
+      ],
+      "title": "EvidenceChunk",
+      "type": "object"
+    },
+    "ToolCall": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "args": {
+          "additionalProperties": true,
+          "title": "Args",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ToolCall",
+      "type": "object"
+    },
+    "ToolResult": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "result": {
+          "additionalProperties": true,
+          "title": "Result",
+          "type": "object"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "name",
+        "ok"
+      ],
+      "title": "ToolResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Contract-first output of the SUT pipeline.\nMust be JSON-serializable and JSON Schema-validatable.",
+  "properties": {
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "case_id": {
+      "minLength": 1,
+      "title": "Case Id",
+      "type": "string"
+    },
+    "success": {
+      "title": "Success",
+      "type": "boolean"
+    },
+    "answer": {
+      "minLength": 1,
+      "title": "Answer",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceChunk"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "citation_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Citation Ids",
+      "type": "array"
+    },
+    "tool_calls": {
+      "items": {
+        "$ref": "#/$defs/ToolCall"
+      },
+      "title": "Tool Calls",
+      "type": "array"
+    },
+    "tool_results": {
+      "items": {
+        "$ref": "#/$defs/ToolResult"
+      },
+      "title": "Tool Results",
+      "type": "array"
+    },
+    "insufficient_evidence": {
+      "default": false,
+      "title": "Insufficient Evidence",
+      "type": "boolean"
+    },
+    "policy_violations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Policy Violations",
+      "type": "array"
+    },
+    "backend": {
+      "default": "mock",
+      "enum": [
+        "mock",
+        "ollama",
+        "bedrock"
+      ],
+      "title": "Backend",
+      "type": "string"
+    },
+    "model": {
+      "default": "mock",
+      "title": "Model",
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "case_id",
+    "success",
+    "answer"
+  ],
+  "title": "Output",
+  "type": "object"
+}
