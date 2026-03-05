@@ -28,11 +28,10 @@ def _load_cases(path: Path) -> list[Case]:
 
 def _aggregate_metrics(run_root: Path) -> dict[str, float]:
     """
-    run_root is the directory that contains per-case run directories.
-    We aggregate by averaging numeric fields from each case metrics.json.
+    Aggregate numeric metrics across per-case metrics.json.
+    Also compute avg_answer_len if present.
     """
     metrics_files = list(run_root.rglob("metrics.json"))
-    # filter out top-level metrics.json if present (we only want per-case)
     per_case = [p for p in metrics_files if p.parent != run_root]
 
     sums: dict[str, float] = {}
@@ -48,6 +47,21 @@ def _aggregate_metrics(run_root: Path) -> dict[str, float]:
         return {}
 
     return {k: v / n for k, v in sums.items()}
+
+def _collect_answer_hashes(run_root: Path) -> dict[str, str]:
+    """
+    Return case_dir_name -> answer_sha256 (from per-case metrics.json).
+    """
+    hashes: dict[str, str] = {}
+    metrics_files = list(run_root.rglob("metrics.json"))
+    per_case = [p for p in metrics_files if p.parent != run_root]
+    for p in per_case:
+        m = json.loads(p.read_text(encoding="utf-8"))
+        h = m.get("answer_sha256")
+        if isinstance(h, str):
+            # use the case run directory name as key (unique within run)
+            hashes[p.parent.name] = h
+    return hashes
 
 
 def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
@@ -77,11 +91,27 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
             pipe.run(c)
 
         per_run_metrics[rid] = _aggregate_metrics(run_root)
+        # store per-case answer hashes for stability comparison
+        per_run_metrics[rid]["_case_count"] = float(len(cases))
 
     # Compare first two entries (MVP)
-    baseline_id = runs[0]["id"]
+        baseline_id = runs[0]["id"]
     candidate_id = runs[1]["id"]
+
+    # Compare numeric metrics
     report = compute_drift_report(per_run_metrics[baseline_id], per_run_metrics[candidate_id])
+
+    # Answer hash stability across cases (drift-sensitive)
+    baseline_hashes = _collect_answer_hashes(out_dir / baseline_id)
+    candidate_hashes = _collect_answer_hashes(out_dir / candidate_id)
+    common = set(baseline_hashes.keys()) & set(candidate_hashes.keys())
+
+    same = 0
+    for k in common:
+        if baseline_hashes[k] == candidate_hashes[k]:
+            same += 1
+
+    answer_hash_stability_rate = same / max(1, len(common))
 
     drift_report = {
         "suite": "drift",
@@ -90,6 +120,7 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
         "candidate": candidate_id,
         "baseline_metrics": per_run_metrics[baseline_id],
         "candidate_metrics": per_run_metrics[candidate_id],
+        "answer_hash_stability_rate": answer_hash_stability_rate,
         **report,
     }
 
@@ -102,6 +133,7 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
     lines.append(f"- baseline: `{baseline_id}`")
     lines.append(f"- candidate: `{candidate_id}`")
     lines.append(f"- drift_score: `{drift_report['drift_score']}`")
+    lines.append(f"- answer_hash_stability_rate: `{drift_report['answer_hash_stability_rate']}`")
     lines.append("")
     lines.append("| metric | baseline | candidate | delta |")
     lines.append("|---|---:|---:|---:|")

@@ -128,9 +128,17 @@ class SUTPipeline:
             json.dumps(out.model_dump(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
         )
 
-        metrics = compute_metrics(out, schema_ok=schema_ok)
+        metrics = compute_metrics(out, schema_ok=schema_ok).to_dict()
+
+        # Add drift-sensitive, deterministic fields
+        import hashlib
+        answer = out.answer or ""
+        metrics["answer_len"] = len(answer)
+        metrics["answer_sha256"] = hashlib.sha256(answer.encode("utf-8")).hexdigest()
+
         (out_dir / "metrics.json").write_text(
-            json.dumps(metrics.to_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+            json.dumps(metrics, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
         )
 
         # 7) manifest (hash prompt+config+artifacts)
