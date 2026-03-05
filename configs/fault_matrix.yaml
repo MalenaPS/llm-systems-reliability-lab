@@ -1,0 +1,18 @@
+version: 1
+scenarios:
+  - id: ok
+    tool: search_kb
+    mode: none
+
+  - id: hard_error
+    tool: search_kb
+    mode: error
+
+  - id: transient_then_ok
+    tool: search_kb
+    mode: transient_error
+    transient_failures: 1
+
+  - id: invalid_output
+    tool: search_kb
+    mode: invalid_output

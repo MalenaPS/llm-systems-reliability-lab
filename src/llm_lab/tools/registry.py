@@ -46,15 +46,28 @@ class ToolRegistry:
             )
 
         try:
-            result = self.tools[call.name](**call.args)
+            raw = self.tools[call.name](**call.args)
 
-            if hasattr(result, "__iter__") and not isinstance(result, dict):
-                result = [r.model_dump() for r in result]
+            # Normalize output to JSON-serializable shape.
+            if isinstance(raw, list):
+                norm_list = []
+                for item in raw:
+                    if hasattr(item, "model_dump"):
+                        norm_list.append(item.model_dump())
+                    elif isinstance(item, dict):
+                        norm_list.append(item)
+                    else:
+                        raise TypeError("tool_return_item_invalid_type")
+                norm: Any = norm_list
+            elif isinstance(raw, dict):
+                norm = raw
+            else:
+                raise TypeError("tool_return_invalid_type")
 
             return ToolResult(
                 name=call.name,
                 ok=True,
-                result={"data": result},
+                result={"data": norm},
                 error=None,
             )
 
@@ -69,13 +82,10 @@ class ToolRegistry:
 
 def default_registry() -> ToolRegistry:
     registry = ToolRegistry()
-
     search_tool = SearchKBTool.default()
-
     registry.register(
         "search_kb",
         search_tool,
         Path("src/llm_lab/tools/schemas/tool_search_kb.schema.json"),
     )
-
     return registry

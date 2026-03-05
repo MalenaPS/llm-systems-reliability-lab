@@ -56,6 +56,22 @@ def demo(
     typer.echo(f"run_dir={out_dir}")
     typer.echo(f"success={out.success} insufficient_evidence={out.insufficient_evidence}")
 
+@app.command()
+def eval(
+    suite: str = typer.Option("reliability"),
+    fault_matrix: str = typer.Option("configs/fault_matrix.yaml"),
+) -> None:
+    """
+    Run evaluation suites.
+    """
+    if suite != "reliability":
+        raise typer.BadParameter("Only suite=reliability implemented in MVP")
+
+    from llm_lab.evals.reliability import run_reliability_suite
+
+    out_dir = run_reliability_suite(Path(fault_matrix))
+    typer.echo(f"run_dir={out_dir}")
+    typer.echo("wrote=reliability_report.json metrics.json")
 
 if __name__ == "__main__":
     app()
