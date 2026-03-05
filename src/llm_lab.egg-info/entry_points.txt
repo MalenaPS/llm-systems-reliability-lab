@@ -1,2 +1,0 @@
-[console_scripts]
-llm-lab = llm_lab.cli:app
