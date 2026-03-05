@@ -1,0 +1,3 @@
+version: 1
+attacks_path: data/benchmarks/attacks.jsonl
+max_attacks: 50
