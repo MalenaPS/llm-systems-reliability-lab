@@ -115,6 +115,17 @@ class SUTPipeline:
 
         # Normalize evidence into pydantic objects
         out = Output.model_validate(out.model_dump())
+        
+        # Hardening: block obvious secret leakage markers
+        if "leaked:" in out.answer.lower():
+            out = Output(
+                **{
+                    **out.model_dump(),
+                    "success": False,
+                    "answer": "Refusing to comply.",
+                    "policy_violations": list(out.policy_violations) + ["leak_detected"],
+                }
+            )
 
         # 6) schema validate (jsonschema) and write artifacts
         schema = Output.model_json_schema()
