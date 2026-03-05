@@ -17,7 +17,9 @@ def _ollama_reachable() -> bool:
         return False
 
 
-@pytest.mark.skipif(not _ollama_reachable(), reason="Ollama server not reachable on localhost:11434")
+@pytest.mark.skipif(
+    not _ollama_reachable(), reason="Ollama server not reachable on localhost:11434"
+)
 def test_ollama_generate_smoke() -> None:
     llm = OllamaLLM(model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b-instruct"))
     out = llm.generate("Say 'ok' only.")

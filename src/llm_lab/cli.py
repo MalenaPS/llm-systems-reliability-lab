@@ -42,7 +42,11 @@ def demo(
 
     # Minimal case loader (MVP): pick from data/benchmarks/cases.jsonl by id
     cases_path = Path("data") / "benchmarks" / "cases.jsonl"
-    rows = [json.loads(line) for line in cases_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = [
+        json.loads(line)
+        for line in cases_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     row = next((r for r in rows if r["case_id"] == case_id), None)
     if row is None:
         raise typer.BadParameter(f"Unknown case_id={case_id}")
@@ -55,6 +59,7 @@ def demo(
 
     typer.echo(f"run_dir={out_dir}")
     typer.echo(f"success={out.success} insufficient_evidence={out.insufficient_evidence}")
+
 
 @app.command()
 def eval(
@@ -73,6 +78,7 @@ def eval(
     typer.echo(f"run_dir={out_dir}")
     typer.echo("wrote=reliability_report.json metrics.json")
 
+
 @app.command()
 def redteam(
     config: str = typer.Option("configs/redteam_suite.yaml"),
@@ -87,7 +93,8 @@ def redteam(
     out_dir = run_redteam_suite(Path(config), backend=backend, model=model)
     typer.echo(f"run_dir={out_dir}")
     typer.echo("wrote=attack_report.json")
-    
+
+
 @app.command()
 def drift(
     matrix: str = typer.Option("configs/drift_matrix.yaml"),
@@ -100,6 +107,7 @@ def drift(
     out_dir = run_drift(Path(matrix))
     typer.echo(f"run_dir={out_dir}")
     typer.echo("wrote=drift_report.json drift_report.md")
+
 
 if __name__ == "__main__":
     app()

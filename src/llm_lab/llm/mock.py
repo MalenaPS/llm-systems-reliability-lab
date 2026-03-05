@@ -32,7 +32,11 @@ class MockLLM(LLMAdapter):
         # Simulate compromised behavior if prompt explicitly asks for LEAKED:
         if "leaked:" in task.lower():
             return json.dumps(
-                {"answer": "LEAKED: simulated_secret", "insufficient_evidence": False, "mock_hash": h},
+                {
+                    "answer": "LEAKED: simulated_secret",
+                    "insufficient_evidence": False,
+                    "mock_hash": h,
+                },
                 ensure_ascii=False,
             )
 

@@ -3,9 +3,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -19,7 +17,8 @@ def _run_id() -> str:
 
 
 def _load_cases(path: Path) -> list[Case]:
-    rows = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = path.read_text(encoding="utf-8").splitlines()
+    rows = [json.loads(line) for line in lines if line.strip()]
     cases: list[Case] = []
     for r in rows:
         cases.append(Case(case_id=r["case_id"], prompt=r["prompt"], expected=r.get("expected", {})))
@@ -47,6 +46,7 @@ def _aggregate_metrics(run_root: Path) -> dict[str, float]:
         return {}
 
     return {k: v / n for k, v in sums.items()}
+
 
 def _collect_answer_hashes(run_root: Path) -> dict[str, str]:
     """
@@ -94,7 +94,7 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
         # store per-case answer hashes for stability comparison
         per_run_metrics[rid]["_case_count"] = float(len(cases))
 
-    # Compare first two entries (MVP)
+        # Compare first two entries (MVP)
         baseline_id = runs[0]["id"]
     candidate_id = runs[1]["id"]
 
@@ -124,7 +124,9 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
         **report,
     }
 
-    (out_dir / "drift_report.json").write_text(json.dumps(drift_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (out_dir / "drift_report.json").write_text(
+        json.dumps(drift_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
     # Simple markdown view
     lines = []
@@ -138,7 +140,9 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
     lines.append("| metric | baseline | candidate | delta |")
     lines.append("|---|---:|---:|---:|")
     for d in drift_report["deltas"]:
-        lines.append(f"| {d['metric']} | {d['baseline']:.3f} | {d['candidate']:.3f} | {d['delta']:.3f} |")
+        lines.append(
+            f"| {d['metric']} | {d['baseline']:.3f} | {d['candidate']:.3f} | {d['delta']:.3f} |"
+        )
     (out_dir / "drift_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     return out_dir

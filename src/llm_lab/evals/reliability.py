@@ -81,16 +81,24 @@ def run_reliability_suite(fault_matrix_path: Path, runs_dir: Path = Path("runs")
             return reg.execute(call)
 
         # Retry until ToolResult.ok == True (or attempts exhausted)
-        res, retries_used = call_with_retry_result(_exec, retry_policy, is_success=lambda r: bool(getattr(r, "ok", False)))
+        res, retries_used = call_with_retry_result(
+            _exec, retry_policy, is_success=lambda r: bool(getattr(r, "ok", False))
+        )
         total_retries += retries_used
 
         if res.ok:
             tool_ok += 1
-            results.append(ReliabilityResult(scenario_id=sid, ok=True, retries_used=retries_used, error=None))
+            results.append(
+                ReliabilityResult(scenario_id=sid, ok=True, retries_used=retries_used, error=None)
+            )
             if mode == "transient_error" and retries_used > 0:
                 transient_recovered += 1
         else:
-            results.append(ReliabilityResult(scenario_id=sid, ok=False, retries_used=retries_used, error=res.error))
+            results.append(
+                ReliabilityResult(
+                    scenario_id=sid, ok=False, retries_used=retries_used, error=res.error
+                )
+            )
 
     tool_success_rate = tool_ok / max(1, tool_total)
     tool_retry_rate = total_retries / max(1, tool_total)
@@ -106,7 +114,9 @@ def run_reliability_suite(fault_matrix_path: Path, runs_dir: Path = Path("runs")
         "recovery_rate": recovery_rate,
         "scenarios": [r.to_dict() for r in results],
     }
-    (out_dir / "reliability_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (out_dir / "reliability_report.json").write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
     metrics = {
         "schema_compliance_rate": 1.0,
@@ -114,6 +124,8 @@ def run_reliability_suite(fault_matrix_path: Path, runs_dir: Path = Path("runs")
         "tool_retry_rate": tool_retry_rate,
         "recovery_rate": recovery_rate,
     }
-    (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (out_dir / "metrics.json").write_text(
+        json.dumps(metrics, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
     return out_dir
