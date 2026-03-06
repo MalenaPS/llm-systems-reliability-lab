@@ -1,9 +1,34 @@
 # LLM Systems Reliability Lab
 
-Engineering reliable LLM systems: evaluation, adversarial testing, behavioral drift monitoring and deterministic pipelines.
+![CI](https://github.com/MalenaPS/llm-systems-reliability-lab/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+![Python](https://img.shields.io/badge/python-3.11-blue)
 
-This repository provides a **reproducible testbed for evaluating reliability and security of LLM-based pipelines**.
-It simulates a production LLM system (RAG + tools + policies) and measures how it behaves under failures, attacks, and model changes.
+Engineering reliable LLM systems: evaluation, adversarial testing,
+behavioral drift monitoring and deterministic pipelines.
+
+## Quick Demo
+
+Run the deterministic pipeline:
+
+``` bash
+python -m llm_lab.cli demo --backend mock
+```
+
+Example output:
+
+``` text
+schema_compliance_rate: 1.0
+tool_success_rate: 1.0
+success_rate: 1.0
+```
+
+---
+
+This repository provides a **reproducible testbed for evaluating
+reliability and security of LLM-based pipelines**.\
+It simulates a production LLM system (RAG + tools + policies) and
+measures how it behaves under failures, attacks, and model changes.
 
 The goal is to make **LLM reliability measurable and reproducible**.
 
