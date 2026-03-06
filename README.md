@@ -2,81 +2,302 @@
 
 Engineering reliable LLM systems: evaluation, adversarial testing, behavioral drift monitoring and deterministic pipelines.
 
+This repository provides a **reproducible testbed for evaluating reliability and security of LLM-based pipelines**.
+It simulates a production LLM system (RAG + tools + policies) and measures how it behaves under failures, attacks, and model changes.
+
+The goal is to make **LLM reliability measurable and reproducible**.
+
 ---
 
-## Quickstart (Mock backend, deterministic)
+# Why this matters
 
-```bash
-uv venv --python 3.11
+LLM systems fail in production for four main reasons:
 
-# activate your venv (Windows PowerShell)
-.\.venv\Scripts\Activate.ps1
+* **Reliability failures** — tools fail, outputs break contracts.
+* **Security vulnerabilities** — prompt injection or tool hijacking.
+* **Model drift** — behavior changes across model updates.
+* **Lack of reproducibility** — no deterministic artifacts or run manifests.
+
+This project provides a **minimal open-source lab to test and measure these risks.**
+
+---
+
+# Features
+
+* Contract-first LLM pipeline (JSON schema enforced)
+* Tool calling with allowlist
+* RAG retrieval (BM25)
+* Fault injection for tools
+* Retry / recovery policies
+* Red-team adversarial testing
+* Drift observatory across model versions
+* Deterministic run manifests
+* Structured artifacts and metrics
+* Fully reproducible local setup
+
+---
+
+# Quickstart (deterministic mock backend)
+
+Clone the repo:
+
+```
+git clone <repo-url>
+cd llm-systems-reliability-lab
+```
+
+Install dependencies:
+
+```
+uv venv
+
+# macOS / Linux
+source .venv/bin/activate
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
 
 uv pip install -e ".[dev]"
+```
 
+Run the deterministic demo:
+
+```
 python -m llm_lab.cli demo --backend mock
 ```
 
-## What you get
+Artifacts will appear in:
 
-- Reproducible runs in `runs/<run_id>/`
-- JSON Schema–validated outputs
-- Fault injection + recovery policies (MVP)
-- Red teaming suite (MVP)
-- Drift observatory across backends/models (MVP)
+```
+runs/<timestamp>/
+```
+
+Example artifacts:
+
+```
+runs/20260305-154606-4c7281d4/
+  output.json
+  metrics.json
+  events.jsonl
+  run_manifest.json
+```
 
 ---
 
-## Project Configuration
+# Running evaluations
 
-### `pyproject.toml`
+## Reliability suite
 
-Create a file named `pyproject.toml`:
+Simulates tool failures and measures recovery.
 
-```toml
-[project]
-name = "llm-lab"
-version = "0.1.0"
-description = "LLM Systems Reliability Lab"
-readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-  "typer>=0.12.0",
-  "pydantic>=2.7.0",
-  "jsonschema>=4.22.0",
-  "structlog>=24.1.0",
-  "httpx>=0.27.0",
-  "pyyaml>=6.0.1",
-  "rank-bm25>=0.2.2",
-  "numpy>=1.26.0",
-  "rich>=13.7.0",
-]
-
-[project.optional-dependencies]
-dev = [
-  "pytest>=8.2.0",
-  "ruff>=0.5.0",
-  "black>=24.4.0",
-]
-
-[project.scripts]
-llm-lab = "llm_lab.cli:app"
-
-[build-system]
-requires = ["setuptools>=69"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-
-[tool.black]
-line-length = 100
-target-version = ["py311"]
 ```
+python -m llm_lab.cli eval --suite reliability \
+  --fault-matrix configs/fault_matrix.yaml
+```
+
+Output:
+
+```
+runs/<id>/reliability_report.json
+runs/<id>/metrics.json
+```
+
+Metrics include:
+
+* tool_success_rate
+* tool_retry_rate
+* recovery_rate
+* schema_compliance_rate
+
+---
+
+## Red team adversarial testing
+
+Runs prompt-injection and tool-hijacking attacks.
+
+```
+python -m llm_lab.cli redteam --backend mock
+```
+
+Example result:
+
+```
+attack_success_rate: 0.0
+```
+
+The pipeline includes a leak-detection guardrail that blocks secrets such as:
+
+```
+LEAKED:
+```
+
+---
+
+## Drift observatory
+
+Compare model behavior across versions.
+
+```
+python -m llm_lab.cli drift \
+  --matrix configs/drift_matrix.yaml
+```
+
+Produces:
+
+```
+drift_report.json
+drift_report.md
+```
+
+Example metrics:
+
+* drift_score
+* answer_hash_stability_rate
+* metric deltas
+
+---
+
+# Example output
+
+Example `metrics.json`:
+
+```
+{
+  "schema_compliance_rate": 1.0,
+  "tool_success_rate": 1.0,
+  "policy_violation_rate": 0.0,
+  "insufficient_evidence_rate": 0.0,
+  "success_rate": 1.0,
+  "citations_valid_rate": 1.0
+}
+```
+
+Example `drift_report.json`:
+
+```
+{
+  "drift_score": 0.5,
+  "answer_hash_stability_rate": 0.0
+}
+```
+
+---
+
+# Architecture
+
+Pipeline components:
+
+```
+User Case
+   |
+Eval Runner
+   |
+SUT Pipeline
+   |
++-------------------+
+| Tool Router       |
+| (JSON schema)     |
++---------+---------+
+          |
+     Fault Injection
+          |
++---------+---------+
+| Tools (mock)      |
++-------------------+
+          |
++-------------------+
+| Retriever (BM25)  |
++-------------------+
+          |
++-------------------+
+| LLM Adapter       |
+| (Mock / Ollama)   |
++-------------------+
+          |
++-------------------+
+| Output Validator  |
+| (schema + policy) |
++-------------------+
+```
+
+Artifacts:
+
+```
+runs/
+   run_manifest.json
+   metrics.json
+   events.jsonl
+   output.json
+```
+
+---
+
+# Metrics
+
+The system tracks:
+
+| Metric                     | Description                           |
+| -------------------------- | ------------------------------------- |
+| schema_compliance_rate     | outputs matching schema               |
+| tool_success_rate          | successful tool executions            |
+| recovery_rate              | recovery from transient failures      |
+| attack_success_rate        | red-team attacks that bypass defenses |
+| drift_score                | metric delta across models            |
+| answer_hash_stability_rate | behavioral stability                  |
+
+---
+
+# CI
+
+GitHub Actions pipeline runs:
+
+* ruff
+* black
+* pytest
+* reliability smoke test
+
+---
+
+# Repository Structure
+
+```
+src/llm_lab
+   pipeline/
+   tools/
+   retrieval/
+   llm/
+   drift/
+   redteam/
+   evals/
+
+configs/
+data/
+tests/
+runs/
+```
+
+---
+
+# Roadmap
+
+Future improvements:
+
+* vector retrieval (FAISS)
+* tool-call parsing from model outputs
+* OpenTelemetry tracing
+* model-based grading
+* Streamlit dashboard
+
+---
+
+# License
+
+Apache License 2.0
+
+Copyright (c) 2026 Malena Pérez Sevilla
+
+Licensed under the Apache License, Version 2.0.
+
+You may obtain a copy of the License at:
+
+http://www.apache.org/licenses/LICENSE-2.0
