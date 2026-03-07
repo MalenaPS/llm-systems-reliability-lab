@@ -65,18 +65,29 @@ def demo(
 def eval(
     suite: str = typer.Option("reliability"),
     fault_matrix: str = typer.Option("configs/fault_matrix.yaml"),
+    backend: str = typer.Option("mock"),
+    model: str = typer.Option("mock-v1"),
 ) -> None:
     """
     Run evaluation suites.
     """
-    if suite != "reliability":
-        raise typer.BadParameter("Only suite=reliability implemented in MVP")
+    if suite == "reliability":
+        from llm_lab.evals.reliability import run_reliability_suite
 
-    from llm_lab.evals.reliability import run_reliability_suite
+        out_dir = run_reliability_suite(Path(fault_matrix))
+        typer.echo(f"run_dir={out_dir}")
+        typer.echo("wrote=reliability_report.json metrics.json")
+        return
 
-    out_dir = run_reliability_suite(Path(fault_matrix))
-    typer.echo(f"run_dir={out_dir}")
-    typer.echo("wrote=reliability_report.json metrics.json")
+    if suite == "full":
+        from llm_lab.evals.full import run_full_eval
+
+        out_dir = run_full_eval(backend=backend, model=model)
+        typer.echo(f"run_dir={out_dir}")
+        typer.echo("wrote=metrics.json llm_grades.json leaderboard.md")
+        return
+
+    raise typer.BadParameter("Supported suites: reliability, full")
 
 
 @app.command()
