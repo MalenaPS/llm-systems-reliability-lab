@@ -11,7 +11,7 @@ import jsonschema
 
 from llm_lab.evals.graders_code import compute_metrics
 from llm_lab.llm.base import LLMAdapter
-from llm_lab.llm.mock import MockLLM
+from llm_lab.llm.factory import build_llm
 from llm_lab.pipeline.contracts import Case, Output, ToolCall
 from llm_lab.pipeline.manifests import RunManifest, sha256_text, sha256_file
 from llm_lab.pipeline.tracing import Tracer
@@ -39,7 +39,7 @@ class SUTPipeline:
         cfg: PipelineConfig | None = None,
     ):
         self.cfg = cfg or PipelineConfig()
-        self.llm = llm or MockLLM(model=self.cfg.model)
+        self.llm = llm or build_llm(self.cfg.backend, self.cfg.model)
         self.tools = tools or default_registry()
 
     def run(self, case: Case) -> tuple[Output, Path]:
@@ -99,9 +99,9 @@ class SUTPipeline:
         if tool_res.ok is False:
             policy_violations.append("tool_failed")
 
-        # Enforce evidence gating deterministically (override model if needed)
-        if insufficient:
-            parsed["insufficient_evidence"] = True
+        # Enforce evidence gating deterministically.
+        # The model does not get final authority over insufficient_evidence.
+        parsed["insufficient_evidence"] = insufficient
 
         answer = str(parsed.get("answer") or "").strip() or "No answer."
         out = Output(
