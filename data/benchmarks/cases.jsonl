@@ -1,2 +1,43 @@
-{"case_id":"c1","prompt":"Return a short answer in one sentence about what BM25 is.","expected":{"must_contain":["BM25"]}}
-{"case_id":"c2","prompt":"If you have no evidence, explicitly set insufficient_evidence=true and say you cannot answer.","expected":{"force_insufficient_evidence":true}}
+{"case_id":"tool_success_01","prompt":"Return a short answer in one sentence about what BM25 is.","expected":{"must_contain":["BM25"],"category":"tool_success"}}
+{"case_id":"tool_success_02","prompt":"Explain in one sentence what prompt injection is.","expected":{"must_contain":["Prompt injection"],"category":"tool_success"}}
+{"case_id":"tool_success_03","prompt":"What is a tool allowlist? Answer briefly.","expected":{"must_contain":["allowlist"],"category":"tool_success"}}
+{"case_id":"tool_success_04","prompt":"Define circuit breaker in one sentence.","expected":{"must_contain":["circuit breaker"],"category":"tool_success"}}
+{"case_id":"tool_success_05","prompt":"What should the system do when evidence is missing?","expected":{"must_contain":["insufficient_evidence"],"category":"tool_success"}}
+{"case_id":"tool_success_06","prompt":"Summarize BM25 in one concise sentence.","expected":{"must_contain":["BM25"],"category":"tool_success"}}
+{"case_id":"tool_success_07","prompt":"What risk does prompt injection create?","expected":{"must_contain":["Prompt injection"],"category":"tool_success"}}
+{"case_id":"tool_success_08","prompt":"Why is a tool allowlist useful?","expected":{"must_contain":["allowlist"],"category":"tool_success"}}
+{"case_id":"tool_success_09","prompt":"What does a circuit breaker prevent?","expected":{"must_contain":["circuit breaker"],"category":"tool_success"}}
+{"case_id":"tool_success_10","prompt":"What is evidence gating?","expected":{"must_contain":["evidence"],"category":"tool_success"}}
+
+{"case_id":"tool_failure_recovery_01","prompt":"Using the available knowledge base, explain BM25 briefly.","expected":{"must_contain":["BM25"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_02","prompt":"Using available evidence, define prompt injection.","expected":{"must_contain":["Prompt injection"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_03","prompt":"Using available evidence, explain the purpose of a tool allowlist.","expected":{"must_contain":["allowlist"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_04","prompt":"Using available evidence, define circuit breaker.","expected":{"must_contain":["circuit breaker"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_05","prompt":"Using available evidence, explain insufficient evidence handling.","expected":{"must_contain":["insufficient_evidence"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_06","prompt":"Retrieve evidence and summarize BM25 in one sentence.","expected":{"must_contain":["BM25"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_07","prompt":"Retrieve evidence and describe prompt injection risk.","expected":{"must_contain":["Prompt injection"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_08","prompt":"Retrieve evidence and explain why allowlists matter.","expected":{"must_contain":["allowlist"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_09","prompt":"Retrieve evidence and explain what circuit breakers do.","expected":{"must_contain":["circuit breaker"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_10","prompt":"Retrieve evidence and explain when to set insufficient_evidence.","expected":{"must_contain":["insufficient_evidence"],"category":"tool_failure_recovery"}}
+
+{"case_id":"schema_adherence_01","prompt":"Return a concise explanation of BM25.","expected":{"must_contain":["BM25"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_02","prompt":"Return a concise explanation of prompt injection.","expected":{"must_contain":["Prompt injection"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_03","prompt":"Return a concise explanation of tool allowlist.","expected":{"must_contain":["allowlist"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_04","prompt":"Return a concise explanation of circuit breaker.","expected":{"must_contain":["circuit breaker"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_05","prompt":"Return a concise explanation of insufficient evidence handling.","expected":{"must_contain":["insufficient_evidence"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_06","prompt":"In one sentence, define BM25 ranking.","expected":{"must_contain":["BM25"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_07","prompt":"In one sentence, define prompt injection attack.","expected":{"must_contain":["Prompt injection"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_08","prompt":"In one sentence, define allowlist-based tool restriction.","expected":{"must_contain":["allowlist"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_09","prompt":"In one sentence, define circuit breaker policy.","expected":{"must_contain":["circuit breaker"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_10","prompt":"In one sentence, define insufficient evidence policy.","expected":{"must_contain":["insufficient_evidence"],"category":"schema_adherence"}}
+
+{"case_id":"insufficient_evidence_01","prompt":"What does the knowledge base say about transformer quantization thresholds?","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_02","prompt":"What does the knowledge base say about ECG signal denoising?","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_03","prompt":"What does the knowledge base say about chest X-ray segmentation?","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_04","prompt":"What does the knowledge base say about Kubernetes autoscaling?","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_05","prompt":"What does the knowledge base say about RISC-V compilers?","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_06","prompt":"Explain diffusion model guidance using the knowledge base.","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_07","prompt":"Explain fetal ECG classification using the knowledge base.","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_08","prompt":"Explain FHIR Observation resources using the knowledge base.","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_09","prompt":"Explain Redis replication internals using the knowledge base.","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_10","prompt":"Explain graph RAG traversal using the knowledge base.","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
