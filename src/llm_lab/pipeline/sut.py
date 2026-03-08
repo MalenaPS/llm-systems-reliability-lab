@@ -18,7 +18,7 @@ from llm_lab.pipeline.tracing import Tracer
 from llm_lab.tools.registry import ToolRegistry, default_registry
 from llm_lab.pipeline.action_parser import parse_model_action
 from llm_lab.pipeline.contracts import FinalAnswerAction, ToolCallAction
-
+from llm_lab.observability.report import build_step_metrics
 
 def _now_run_id() -> str:
     # stable-ish and unique
@@ -49,20 +49,31 @@ class SUTPipeline:
         out_dir = self.cfg.runs_dir / run_id
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        tracer = Tracer(events_path=out_dir / "events.jsonl")
+        tracer = Tracer(events_path=out_dir / "events.jsonl", run_id=run_id)
         tracer.emit(
-            "run_start",
-            run_id=run_id,
+            "run",
+            event_type="start",
+            success=True,
             case_id=case.case_id,
             backend=self.cfg.backend,
             model=self.cfg.model,
         )
 
         # 1) retrieval via tool
-        tracer.emit("tool_call", tool_name="search_kb")
         tool_call = ToolCall(name="search_kb", args={"query": case.prompt, "top_k": 5})
+
+        t0 = time.perf_counter()
+        tracer.emit("tool.search_kb", event_type="start", tool_name="search_kb")
         tool_res = self.tools.execute(tool_call)
-        tracer.emit("tool_result", tool_name="search_kb", ok=tool_res.ok, error=tool_res.error)
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+        tracer.emit(
+            "tool.search_kb",
+            event_type="tool_result",
+            latency_ms=latency_ms,
+            success=tool_res.ok,
+            error_type=tool_res.error,
+            tool_name="search_kb",
+        )
 
         evidence: list[dict[str, Any]] = []
         if tool_res.ok:
@@ -88,9 +99,17 @@ class SUTPipeline:
         }
         prompt_text = json.dumps(action_prompt, ensure_ascii=False)
 
-        tracer.emit("llm_generate_start", phase="action")
+        llm_t0 = time.perf_counter()
+        tracer.emit("llm.action", event_type="start", phase="action")
         llm_text = self.llm.generate(prompt_text)
-        tracer.emit("llm_generate_end", phase="action", n_chars=len(llm_text))
+        tracer.emit(
+            "llm.action",
+            event_type="end",
+            latency_ms=int((time.perf_counter() - llm_t0) * 1000),
+            success=True,
+            phase="action",
+            n_chars=len(llm_text),
+        )
 
         parsed: dict[str, Any]
 
@@ -98,17 +117,26 @@ class SUTPipeline:
             model_action = parse_model_action(llm_text)
 
             if isinstance(model_action, ToolCallAction):
-                tracer.emit("tool_call_model", tool_name=model_action.tool_name)
+                tracer.emit(
+                    "tool.model_call",
+                    event_type="start",
+                    success=True,
+                    tool_name=model_action.tool_name,
+                )
                 
                 second_tool_call = ToolCall(name=model_action.tool_name, args=model_action.args)
+                t1 = time.perf_counter()
                 second_tool_res = self.tools.execute(second_tool_call)
 
                 tracer.emit(
-                    "tool_result_model",
+                    "tool.model_call",
+                    event_type="tool_result",
+                    latency_ms=int((time.perf_counter() - t1) * 1000),
+                    success=second_tool_res.ok,
+                    error_type=second_tool_res.error,
                     tool_name=model_action.tool_name,
-                    ok=second_tool_res.ok,
-                    error=second_tool_res.error,
                 )
+                
                 # Append model-triggered call/result to traces
                 tool_calls = [tool_call, second_tool_call]
                 tool_results = [tool_res, second_tool_res]
@@ -127,9 +155,17 @@ class SUTPipeline:
                     "evidence": evidence,
                 }
 
-                tracer.emit("llm_generate_start", phase="final_answer")
+                llm_t1 = time.perf_counter()
+                tracer.emit("llm.final_answer", event_type="start", phase="final_answer")
                 llm_text_final = self.llm.generate(json.dumps(final_prompt, ensure_ascii=False))
-                tracer.emit("llm_generate_end", phase="final_answer", n_chars=len(llm_text_final))
+                tracer.emit(
+                    "llm.final_answer",
+                    event_type="end",
+                    latency_ms=int((time.perf_counter() - llm_t1) * 1000),
+                    success=True,
+                    phase="final_answer",
+                    n_chars=len(llm_text_final),
+                )
 
                 final_action = parse_model_action(llm_text_final)
                 if isinstance(final_action, FinalAnswerAction):
@@ -167,6 +203,12 @@ class SUTPipeline:
             try:
                 parsed = json.loads(fallback_text)
             except Exception:
+                tracer.emit(
+                    "pipeline.fallback",
+                    event_type="fallback",
+                    success=False,
+                    error_type="model_action_parse_or_execution_failed",
+                )
                 parsed = {"answer": "Invalid JSON from model.", "insufficient_evidence": True}
 
         # 5) build Output
@@ -247,8 +289,10 @@ class SUTPipeline:
             sort_keys=True,
         )
 
+        build_step_metrics(out_dir / "events.jsonl", out_dir / "step_metrics.json")
+
         artifacts: dict[str, str] = {}
-        for fname in ["output.json", "metrics.json", "events.jsonl"]:
+        for fname in ["output.json", "metrics.json", "events.jsonl", "step_metrics.json"]:
             p = out_dir / fname
             artifacts[fname] = sha256_file(p)
 
@@ -270,9 +314,10 @@ class SUTPipeline:
         manifest.write(manifest_path)
 
         tracer.emit(
-            "run_end",
-            run_id=run_id,
+            "run",
+            event_type="end",
             success=out.success,
             insufficient_evidence=out.insufficient_evidence,
         )
+
         return out, out_dir
