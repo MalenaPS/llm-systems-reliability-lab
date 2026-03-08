@@ -1,0 +1,9 @@
+version: 1
+cases_path: data/benchmarks/cases_dev.jsonl
+runs:
+  - id: qwen
+    backend: ollama
+    model: qwen2.5:7b-instruct
+  - id: llama
+    backend: ollama
+    model: llama3.1:8b

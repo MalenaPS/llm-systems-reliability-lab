@@ -112,6 +112,11 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
             same += 1
 
     answer_hash_stability_rate = same / max(1, len(common))
+    
+    schema_delta = per_run_metrics[candidate_id].get("schema_compliance_rate", 0.0) - per_run_metrics[baseline_id].get("schema_compliance_rate", 0.0)
+    tool_success_delta = per_run_metrics[candidate_id].get("tool_success_rate", 0.0) - per_run_metrics[baseline_id].get("tool_success_rate", 0.0)
+    policy_violation_delta = per_run_metrics[candidate_id].get("policy_violation_rate", 0.0) - per_run_metrics[baseline_id].get("policy_violation_rate", 0.0)
+    insufficient_evidence_delta = per_run_metrics[candidate_id].get("insufficient_evidence_rate", 0.0) - per_run_metrics[baseline_id].get("insufficient_evidence_rate", 0.0)
 
     drift_report = {
         "suite": "drift",
@@ -121,11 +126,31 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
         "baseline_metrics": per_run_metrics[baseline_id],
         "candidate_metrics": per_run_metrics[candidate_id],
         "answer_hash_stability_rate": answer_hash_stability_rate,
+        "schema_delta": schema_delta,
+        "tool_success_delta": tool_success_delta,
+        "policy_violation_delta": policy_violation_delta,
+        "insufficient_evidence_delta": insufficient_evidence_delta,
         **report,
     }
 
+    matrix_name = matrix_path.stem.lower()
+    if "mock" in matrix_name:
+        report_json_name = "drift_report_mock.json"
+        report_md_name = "drift_report_mock.md"
+    elif "local" in matrix_name or "dev" in matrix_name:
+        report_json_name = "drift_report_local.json"
+        report_md_name = "drift_report_local.md"
+    else:
+        report_json_name = "drift_report.json"
+        report_md_name = "drift_report.md"
+
     (out_dir / "drift_report.json").write_text(
-        json.dumps(drift_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(drift_report, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    (out_dir / report_json_name).write_text(
+        json.dumps(drift_report, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
     )
 
     # Simple markdown view
@@ -136,6 +161,10 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
     lines.append(f"- candidate: `{candidate_id}`")
     lines.append(f"- drift_score: `{drift_report['drift_score']}`")
     lines.append(f"- answer_hash_stability_rate: `{drift_report['answer_hash_stability_rate']}`")
+    lines.append(f"- schema_delta: `{drift_report['schema_delta']}`")
+    lines.append(f"- tool_success_delta: `{drift_report['tool_success_delta']}`")
+    lines.append(f"- policy_violation_delta: `{drift_report['policy_violation_delta']}`")
+    lines.append(f"- insufficient_evidence_delta: `{drift_report['insufficient_evidence_delta']}`")
     lines.append("")
     lines.append("| metric | baseline | candidate | delta |")
     lines.append("|---|---:|---:|---:|")
@@ -143,6 +172,8 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
         lines.append(
             f"| {d['metric']} | {d['baseline']:.3f} | {d['candidate']:.3f} | {d['delta']:.3f} |"
         )
-    (out_dir / "drift_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-
+    markdown_text = "\n".join(lines) + "\n"
+    (out_dir / "drift_report.md").write_text(markdown_text, encoding="utf-8")
+    (out_dir / report_md_name).write_text(markdown_text, encoding="utf-8")
+    
     return out_dir

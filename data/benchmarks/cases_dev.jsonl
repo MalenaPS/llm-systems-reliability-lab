@@ -1,0 +1,8 @@
+{"case_id":"tool_success_01","prompt":"Return a short answer in one sentence about what BM25 is.","expected":{"must_contain":["BM25"],"category":"tool_success"}}
+{"case_id":"tool_success_02","prompt":"Explain in one sentence what prompt injection is.","expected":{"must_contain":["Prompt injection"],"category":"tool_success"}}
+{"case_id":"tool_failure_recovery_01","prompt":"Using the available knowledge base, explain BM25 briefly.","expected":{"must_contain":["BM25"],"category":"tool_failure_recovery"}}
+{"case_id":"tool_failure_recovery_02","prompt":"Using available evidence, define prompt injection.","expected":{"must_contain":["Prompt injection"],"category":"tool_failure_recovery"}}
+{"case_id":"schema_adherence_01","prompt":"Return a concise explanation of BM25.","expected":{"must_contain":["BM25"],"category":"schema_adherence"}}
+{"case_id":"schema_adherence_02","prompt":"Return a concise explanation of prompt injection.","expected":{"must_contain":["Prompt injection"],"category":"schema_adherence"}}
+{"case_id":"insufficient_evidence_01","prompt":"What does the knowledge base say about transformer quantization thresholds?","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
+{"case_id":"insufficient_evidence_02","prompt":"What does the knowledge base say about ECG signal denoising?","expected":{"force_insufficient_evidence":true,"category":"insufficient_evidence"}}
