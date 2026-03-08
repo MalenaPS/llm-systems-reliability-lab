@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModelActionEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": ["tool_call", "final_answer"]
+    },
+    "tool_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "args": {
+      "type": "object"
+    },
+    "answer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "insufficient_evidence": {
+      "type": "boolean"
+    }
+  },
+  "required": ["action"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": { "const": "tool_call" }
+        }
+      },
+      "then": {
+        "required": ["tool_name", "args"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": { "const": "final_answer" }
+        }
+      },
+      "then": {
+        "required": ["answer", "insufficient_evidence"]
+      }
+    }
+  ]
+}

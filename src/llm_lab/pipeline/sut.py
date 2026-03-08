@@ -16,6 +16,8 @@ from llm_lab.pipeline.contracts import Case, Output, ToolCall
 from llm_lab.pipeline.manifests import RunManifest, sha256_text, sha256_file
 from llm_lab.pipeline.tracing import Tracer
 from llm_lab.tools.registry import ToolRegistry, default_registry
+from llm_lab.pipeline.action_parser import parse_model_action
+from llm_lab.pipeline.contracts import FinalAnswerAction, ToolCallAction
 
 
 def _now_run_id() -> str:
@@ -71,28 +73,101 @@ class SUTPipeline:
         # 2) evidence gating
         insufficient = len(evidence) < self.cfg.min_evidence_chunks
 
-        # 3) compose prompt (MVP)
-        prompt = {
-            "instruction": "You are a JSON-only assistant. Return ONLY valid JSON object.",
+        # 3) model action step: either tool_call or final_answer
+        action_prompt = {
+            "instruction": (
+                "Return exactly one JSON object and no extra text. "
+                "Allowed actions: "
+                '{"action":"tool_call","tool_name":"search_kb","args":{"query":"...","top_k":5}} '
+                "or "
+                '{"action":"final_answer","answer":"...","insufficient_evidence":false}.'
+            ),
             "task": case.prompt,
+            "available_tools": ["search_kb"],
             "evidence": evidence,
-            "requirements": {
-                "fields": ["answer", "insufficient_evidence"],
-                "insufficient_evidence_rule": "true if evidence is missing or irrelevant",
-            },
         }
-        prompt_text = json.dumps(prompt, ensure_ascii=False)
+        prompt_text = json.dumps(action_prompt, ensure_ascii=False)
 
-        tracer.emit("llm_generate_start")
+        tracer.emit("llm_generate_start", phase="action")
         llm_text = self.llm.generate(prompt_text)
-        tracer.emit("llm_generate_end", n_chars=len(llm_text))
+        tracer.emit("llm_generate_end", phase="action", n_chars=len(llm_text))
 
-        # 4) parse LLM JSON (strict; if fails, fallback)
         parsed: dict[str, Any]
+
         try:
-            parsed = json.loads(llm_text)
+            model_action = parse_model_action(llm_text)
+
+            if isinstance(model_action, ToolCallAction):
+                tracer.emit("tool_call_model", tool_name=model_action.tool_name)
+                
+                second_tool_call = ToolCall(name=model_action.tool_name, args=model_action.args)
+                second_tool_res = self.tools.execute(second_tool_call)
+
+                tracer.emit(
+                    "tool_result_model",
+                    tool_name=model_action.tool_name,
+                    ok=second_tool_res.ok,
+                    error=second_tool_res.error,
+                )
+                # Append model-triggered call/result to traces
+                tool_calls = [tool_call, second_tool_call]
+                tool_results = [tool_res, second_tool_res]
+
+                model_tool_data = second_tool_res.result.get("data", []) if second_tool_res.ok else []
+                if second_tool_res.ok and isinstance(model_tool_data, list) and model_tool_data:
+                    evidence = model_tool_data
+
+                final_prompt = {
+                    "instruction": (
+                        "Return exactly one JSON object and no extra text. "
+                        'Format: {"action":"final_answer","answer":"...","insufficient_evidence":false}'
+                    ),
+                    "task": case.prompt,
+                    "tool_result": model_tool_data,
+                    "evidence": evidence,
+                }
+
+                tracer.emit("llm_generate_start", phase="final_answer")
+                llm_text_final = self.llm.generate(json.dumps(final_prompt, ensure_ascii=False))
+                tracer.emit("llm_generate_end", phase="final_answer", n_chars=len(llm_text_final))
+
+                final_action = parse_model_action(llm_text_final)
+                if isinstance(final_action, FinalAnswerAction):
+                    parsed = {
+                        "answer": final_action.answer,
+                        "insufficient_evidence": final_action.insufficient_evidence,
+                    }
+                else:
+                    parsed = {"answer": "Invalid final action from model.", "insufficient_evidence": True}
+
+            else:
+                tool_calls = [tool_call]
+                tool_results = [tool_res]
+                parsed = {
+                    "answer": model_action.answer,
+                    "insufficient_evidence": model_action.insufficient_evidence,
+                }
+
         except Exception:
-            parsed = {"answer": "Invalid JSON from model.", "insufficient_evidence": True}
+            # Fallback to previous direct JSON-answer behavior
+            tool_calls = [tool_call]
+            tool_results = [tool_res]
+
+            fallback_prompt = {
+                "instruction": "You are a JSON-only assistant. Return ONLY valid JSON object.",
+                "task": case.prompt,
+                "evidence": evidence,
+                "requirements": {
+                    "fields": ["answer", "insufficient_evidence"],
+                    "insufficient_evidence_rule": "true if evidence is missing or irrelevant",
+                },
+            }
+
+            fallback_text = self.llm.generate(json.dumps(fallback_prompt, ensure_ascii=False))
+            try:
+                parsed = json.loads(fallback_text)
+            except Exception:
+                parsed = {"answer": "Invalid JSON from model.", "insufficient_evidence": True}
 
         # 5) build Output
         policy_violations: list[str] = []
@@ -114,8 +189,8 @@ class SUTPipeline:
                 for e in evidence
             ],
             citation_ids=[e["chunk_id"] for e in evidence[:1]] if evidence else [],
-            tool_calls=[tool_call],
-            tool_results=[tool_res],
+            tool_calls=tool_calls,
+            tool_results=tool_results,
             insufficient_evidence=bool(parsed.get("insufficient_evidence")),
             policy_violations=policy_violations,
             backend=self.cfg.backend,

@@ -41,6 +41,38 @@ class ToolResult(BaseModel):
     ok: bool
     result: dict[str, Any] = Field(default_factory=dict)
     error: str | None = None
+    
+class ToolCallAction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["tool_call"]
+    tool_name: str = Field(..., min_length=1)
+    args: dict[str, Any] = Field(default_factory=dict)
+
+
+class FinalAnswerAction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["final_answer"]
+    answer: str = Field(..., min_length=1)
+    insufficient_evidence: bool = False
+
+
+class ModelActionEnvelope(BaseModel):
+    """
+    Discriminated envelope used for model-driven tool calling.
+    This is intentionally minimal:
+      - tool_call
+      - final_answer
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["tool_call", "final_answer"]
+    tool_name: str | None = None
+    args: dict[str, Any] | None = None
+    answer: str | None = None
+    insufficient_evidence: bool | None = None
 
 
 class Output(BaseModel):
