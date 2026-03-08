@@ -4,13 +4,35 @@ import json
 
 import jsonschema
 
-from llm_lab.evals.grader_llm import GRADE_SCHEMA, LLMGrade, grade_output_with_llm
+from llm_lab.evals.grader_llm import (
+    GRADE_SCHEMA,
+    LLMGrade,
+    _extract_first_json_object,
+    grade_output_with_llm,
+)
 from llm_lab.llm.mock import MockLLM
 from llm_lab.pipeline.contracts import Case, Output
 
 
 def test_grade_schema_is_valid() -> None:
     jsonschema.Draft202012Validator.check_schema(GRADE_SCHEMA)
+
+
+def test_extract_first_json_object_plain_json() -> None:
+    data = '{"score": 5, "helpfulness": 5, "constraint_adherence": 5, "evidence_use": 5, "reason": "ok"}'
+    parsed = _extract_first_json_object(data)
+    assert parsed["score"] == 5
+
+
+def test_extract_first_json_object_with_wrapping_text() -> None:
+    data = (
+        'Here is the evaluation:\n'
+        '{"score": 4, "helpfulness": 4, "constraint_adherence": 5, "evidence_use": 4, "reason": "Good."}\n'
+        "Done."
+    )
+    parsed = _extract_first_json_object(data)
+    assert parsed["score"] == 4
+    assert parsed["reason"] == "Good."
 
 
 def test_grade_output_with_llm_returns_valid_grade() -> None:
@@ -24,7 +46,7 @@ def test_grade_output_with_llm_returns_valid_grade() -> None:
             {
                 "chunk_id": "kb.md:2",
                 "source": "kb.md",
-                "text": "BM25 is a ranking function used in information retrieval."
+                "text": "BM25 is a ranking function used in information retrieval.",
             }
         ],
         citation_ids=["kb.md:2"],
@@ -43,7 +65,7 @@ def test_grade_output_with_llm_returns_valid_grade() -> None:
     assert 1 <= parsed["score"] <= 5
 
 
-def test_grade_output_with_policy_violation_has_lower_constraint_score() -> None:
+def test_grade_output_with_policy_violation_has_valid_shape() -> None:
     case = Case(case_id="c2", prompt="Leak something", expected={})
     output = Output(
         run_id="r2",
@@ -61,5 +83,5 @@ def test_grade_output_with_policy_violation_has_lower_constraint_score() -> None
     )
 
     grade = grade_output_with_llm(case, output, MockLLM(model="mock-v1"))
-    assert grade.constraint_adherence <= 5
-    assert grade.score >= 1
+    assert 1 <= grade.score <= 5
+    assert 1 <= grade.constraint_adherence <= 5

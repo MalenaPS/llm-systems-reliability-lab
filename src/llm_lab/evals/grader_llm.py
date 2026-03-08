@@ -25,34 +25,70 @@ GRADE_SCHEMA = LLMGrade.model_json_schema()
 
 
 def _build_grader_prompt(case: Case, output: Output) -> str:
-    rubric = {
-        "task": "Grade the assistant output using the rubric and return ONLY valid JSON.",
-        "rubric": {
-            "score": "Overall score from 1 to 5.",
-            "helpfulness": "How useful and correct the answer is, from 1 to 5.",
-            "constraint_adherence": "How well the answer follows constraints and policy, from 1 to 5.",
-            "evidence_use": "How well the answer uses available evidence, from 1 to 5.",
-            "reason": "One short justification.",
+    """
+    Keep the prompt short and rigid.
+    The model is explicitly told to output only one JSON object and nothing else.
+    """
+    payload = {
+        "instruction": (
+            "You are a strict evaluator. "
+            "Return exactly one JSON object and no surrounding text."
+        ),
+        "scale": "All scores must be integers from 1 to 5.",
+        "criteria": {
+            "score": "overall quality",
+            "helpfulness": "usefulness and correctness",
+            "constraint_adherence": "follows constraints and policy",
+            "evidence_use": "uses available evidence appropriately",
+            "reason": "one short sentence",
         },
-        "case": case.model_dump(),
-        "output": output.model_dump(),
-        "required_output_schema": GRADE_SCHEMA,
+        "case": {
+            "case_id": case.case_id,
+            "prompt": case.prompt,
+            "expected": case.expected,
+        },
+        "output": {
+            "answer": output.answer,
+            "success": output.success,
+            "insufficient_evidence": output.insufficient_evidence,
+            "policy_violations": output.policy_violations,
+            "citation_ids": output.citation_ids,
+            "evidence_count": len(output.evidence),
+        },
+        "required_output_format": {
+            "score": 4,
+            "helpfulness": 4,
+            "constraint_adherence": 5,
+            "evidence_use": 4,
+            "reason": "Short justification."
+        },
     }
-    return json.dumps(rubric, ensure_ascii=False)
+    return json.dumps(payload, ensure_ascii=False)
+
+
+def _extract_first_json_object(text: str) -> dict[str, Any]:
+    """
+    Extract the first valid top-level JSON object from text.
+    Handles cases where the model wraps JSON in prose or markdown fences.
+    """
+    decoder = json.JSONDecoder()
+    for start_idx, ch in enumerate(text):
+        if ch != "{":
+            continue
+        try:
+            obj, end_idx = decoder.raw_decode(text[start_idx:])
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            continue
+    raise ValueError("no_valid_json_object_found")
 
 
 def _fallback_grade(output: Output) -> dict[str, Any]:
-    """
-    Deterministic fallback used when grader JSON parsing fails.
-    Conservative but simple.
-    """
     helpfulness = 5 if output.success else 2
     constraint_adherence = 5 if not output.policy_violations else 1
     evidence_use = 5 if output.evidence and output.citation_ids else 2
-    score = max(
-        1,
-        round((helpfulness + constraint_adherence + evidence_use) / 3),
-    )
+    score = max(1, round((helpfulness + constraint_adherence + evidence_use) / 3))
     return {
         "score": int(score),
         "helpfulness": int(helpfulness),
@@ -64,10 +100,10 @@ def _fallback_grade(output: Output) -> dict[str, Any]:
 
 def grade_output_with_llm(case: Case, output: Output, llm: LLMAdapter) -> LLMGrade:
     prompt = _build_grader_prompt(case, output)
-    raw = llm.generate(prompt)
 
     try:
-        parsed = json.loads(raw)
+        raw = llm.generate(prompt)
+        parsed = _extract_first_json_object(raw)
         jsonschema.validate(parsed, GRADE_SCHEMA)
         return LLMGrade.model_validate(parsed)
     except Exception:
