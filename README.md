@@ -7,9 +7,76 @@
 Engineering reliable LLM systems: evaluation, adversarial testing,
 behavioral drift monitoring and deterministic pipelines.
 
-## Quick Demo
+------------------------------------------------------------------------
 
-Run the deterministic pipeline:
+## Why this project exists
+
+LLM systems often perform well in demos but fail in production
+environments.
+
+Typical failure modes include:
+
+• tool calls that fail or return malformed outputs\
+• outputs that break JSON contracts\
+• prompt injection attacks and tool hijacking\
+• behavioral drift between model versions\
+• lack of reproducible execution artifacts
+
+This repository provides a **reproducible laboratory for evaluating LLM
+system reliability**.
+
+It simulates a realistic LLM pipeline (RAG + tools + guardrails) and
+measures how it behaves under:
+
+• failures\
+• adversarial attacks\
+• model changes
+
+The goal is to make **LLM reliability measurable, testable, and
+reproducible**.
+
+------------------------------------------------------------------------
+
+## What this project provides
+
+• Contract-first LLM pipelines (strict JSON schemas)\
+• Tool-calling robustness evaluation\
+• Fault injection for tool failures\
+• Retry / recovery policies\
+• Red-team adversarial prompt testing\
+• Model behavior drift monitoring\
+• Deterministic execution manifests\
+• Structured run artifacts and metrics\
+• Fully reproducible local experiments
+
+------------------------------------------------------------------------
+
+## Architecture Overview
+
+The system evaluates an LLM pipeline as a **System Under Test (SUT)**.
+
+Benchmark Case\
+\|\
+v\
+Evaluation Runner\
+\|\
+v\
+SUT Pipeline\
+(prompt + retrieval + tools)\
+\|\
+v\
+Output Validator\
+(schema + policies)\
+\|\
+v\
+Run Artifacts\
+(metrics, events, manifest)
+
+------------------------------------------------------------------------
+
+## Quickstart
+
+Run the deterministic demo pipeline:
 
 ``` bash
 python -m llm_lab.cli demo --backend mock
@@ -17,176 +84,94 @@ python -m llm_lab.cli demo --backend mock
 
 Example output:
 
-``` text
-schema_compliance_rate: 1.0
-tool_success_rate: 1.0
-success_rate: 1.0
-```
-
----
-
-This repository provides a **reproducible testbed for evaluating
-reliability and security of LLM-based pipelines**.\
-It simulates a production LLM system (RAG + tools + policies) and
-measures how it behaves under failures, attacks, and model changes.
-
-The goal is to make **LLM reliability measurable and reproducible**.
-
----
-
-# Why this matters
-
-LLM systems fail in production for four main reasons:
-
-* **Reliability failures** — tools fail, outputs break contracts.
-* **Security vulnerabilities** — prompt injection or tool hijacking.
-* **Model drift** — behavior changes across model updates.
-* **Lack of reproducibility** — no deterministic artifacts or run manifests.
-
-This project provides a **minimal open-source lab to test and measure these risks.**
-
----
-
-# Features
-
-* Contract-first LLM pipeline (JSON schema enforced)
-* Tool calling with allowlist
-* RAG retrieval (BM25)
-* Fault injection for tools
-* Retry / recovery policies
-* Red-team adversarial testing
-* Drift observatory across model versions
-* Deterministic run manifests
-* Structured artifacts and metrics
-* Fully reproducible local setup
-
----
-
-# Quickstart (deterministic mock backend)
-
-Clone the repo:
-
-```
-git clone <repo-url>
-cd llm-systems-reliability-lab
-```
-
-Install dependencies:
-
-```
-uv venv
-
-# macOS / Linux
-source .venv/bin/activate
-
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-
-uv pip install -e ".[dev]"
-```
-
-Run the deterministic demo:
-
-```
-python -m llm_lab.cli demo --backend mock
-```
+    schema_compliance_rate: 1.0
+    tool_success_rate: 1.0
+    success_rate: 1.0
 
 Artifacts will appear in:
 
-```
-runs/<timestamp>/
-```
+    runs/<timestamp>/
 
 Example artifacts:
 
-```
-runs/20260305-154606-4c7281d4/
-  output.json
-  metrics.json
-  events.jsonl
-  run_manifest.json
-```
+    runs/<timestamp>/
+      output.json
+      metrics.json
+      events.jsonl
+      run_manifest.json
 
----
+------------------------------------------------------------------------
 
-# Running evaluations
+## Running evaluations
 
-## Reliability suite
+### Reliability suite
 
-Simulates tool failures and measures recovery.
+Simulates tool failures and evaluates recovery behavior.
 
-```
+``` bash
 python -m llm_lab.cli eval --suite reliability \
   --fault-matrix configs/fault_matrix.yaml
 ```
 
-Output:
+Metrics produced:
 
-```
-runs/<id>/reliability_report.json
-runs/<id>/metrics.json
-```
+• tool_success_rate\
+• tool_retry_rate\
+• recovery_rate\
+• schema_compliance_rate
 
-Metrics include:
+Artifacts:
 
-* tool_success_rate
-* tool_retry_rate
-* recovery_rate
-* schema_compliance_rate
+    reliability_report.json
+    metrics.json
 
----
+------------------------------------------------------------------------
 
-## Red team adversarial testing
+### Red Team testing
 
-Runs prompt-injection and tool-hijacking attacks.
+Runs adversarial prompt injection attacks.
 
-```
+``` bash
 python -m llm_lab.cli redteam --backend mock
 ```
 
 Example result:
 
-```
-attack_success_rate: 0.0
-```
+    attack_success_rate: 0.0
 
-The pipeline includes a leak-detection guardrail that blocks secrets such as:
+Security guardrails detect leaks such as:
 
-```
-LEAKED:
-```
+    LEAKED:
 
----
+------------------------------------------------------------------------
 
-## Drift observatory
+### Drift observatory
 
-Compare model behavior across versions.
+Compare behavior across model versions.
 
-```
+``` bash
 python -m llm_lab.cli drift \
   --matrix configs/drift_matrix.yaml
 ```
 
 Produces:
 
-```
-drift_report.json
-drift_report.md
-```
+    drift_report.json
+    drift_report.md
 
 Example metrics:
 
-* drift_score
-* answer_hash_stability_rate
-* metric deltas
+• drift_score\
+• answer_hash_stability_rate\
+• metric deltas across models
 
----
+------------------------------------------------------------------------
 
-# Example output
+## Example Metrics
 
 Example `metrics.json`:
 
-```
+``` json
 {
   "schema_compliance_rate": 1.0,
   "tool_success_rate": 1.0,
@@ -199,121 +184,127 @@ Example `metrics.json`:
 
 Example `drift_report.json`:
 
-```
+``` json
 {
   "drift_score": 0.5,
   "answer_hash_stability_rate": 0.0
 }
 ```
 
----
+------------------------------------------------------------------------
 
-# Architecture
+## Reliability Metrics
 
-Pipeline components:
+  Metric                       Description
+  ---------------------------- ------------------------------------------
+  schema_compliance_rate       \% outputs valid JSON
+  tool_success_rate            successful tool executions
+  recovery_rate                failures recovered via retry
+  attack_success_rate          adversarial prompts that bypass defenses
+  drift_score                  behavioral change between models
+  answer_hash_stability_rate   behavioral stability
 
-```
-User Case
-   |
-Eval Runner
-   |
-SUT Pipeline
-   |
-+-------------------+
-| Tool Router       |
-| (JSON schema)     |
-+---------+---------+
-          |
-     Fault Injection
-          |
-+---------+---------+
-| Tools (mock)      |
-+-------------------+
-          |
-+-------------------+
-| Retriever (BM25)  |
-+-------------------+
-          |
-+-------------------+
-| LLM Adapter       |
-| (Mock / Ollama)   |
-+-------------------+
-          |
-+-------------------+
-| Output Validator  |
-| (schema + policy) |
-+-------------------+
-```
+------------------------------------------------------------------------
 
-Artifacts:
+## Deterministic CI Mode vs Local Real Execution
 
-```
-runs/
-   run_manifest.json
-   metrics.json
-   events.jsonl
-   output.json
-```
+The project supports two execution modes.
 
----
+### Mode A --- Deterministic CI Mode
 
-# Metrics
+Used for reproducible testing.
 
-The system tracks:
+Backend:
 
-| Metric                     | Description                           |
-| -------------------------- | ------------------------------------- |
-| schema_compliance_rate     | outputs matching schema               |
-| tool_success_rate          | successful tool executions            |
-| recovery_rate              | recovery from transient failures      |
-| attack_success_rate        | red-team attacks that bypass defenses |
-| drift_score                | metric delta across models            |
-| answer_hash_stability_rate | behavioral stability                  |
+    mock
 
----
+Characteristics:
 
-# CI
+• deterministic outputs\
+• fast execution\
+• CI-compatible
 
-GitHub Actions pipeline runs:
+Typical commands:
 
-* ruff
-* black
-* pytest
-* reliability smoke test
+    python -m pytest
+    python -m llm_lab.cli demo --backend mock
+    python -m llm_lab.cli eval --suite reliability --backend mock
 
----
+------------------------------------------------------------------------
 
-# Repository Structure
+### Mode B --- Local Real Mode
 
-```
-src/llm_lab
-   pipeline/
-   tools/
-   retrieval/
-   llm/
-   drift/
-   redteam/
-   evals/
+Used for real model experimentation.
 
-configs/
-data/
-tests/
-runs/
-```
+Backend:
 
----
+    ollama
 
-# Roadmap
+Example:
+
+    python -m llm_lab.cli demo --backend ollama --model qwen2.5:7b-instruct
+    python -m llm_lab.cli drift --matrix configs/drift_matrix_local.yaml
+
+Characteristics:
+
+• real model inference\
+• real latency\
+• real drift observation
+
+------------------------------------------------------------------------
+
+## Design Principles
+
+• Contract-first outputs\
+• Deterministic execution\
+• Observable pipelines\
+• Failure-aware design\
+• Reproducible evaluation
+
+------------------------------------------------------------------------
+
+## Repository Structure
+
+    src/llm_lab
+       pipeline/
+       tools/
+       retrieval/
+       llm/
+       drift/
+       redteam/
+       evals/
+
+    configs/
+    data/
+    tests/
+    runs/
+    docs/
+
+------------------------------------------------------------------------
+
+## CI
+
+GitHub Actions runs:
+
+• ruff\
+• black\
+• pytest\
+• reliability smoke tests
+
+------------------------------------------------------------------------
+
+## Roadmap
 
 Future improvements:
 
-* vector retrieval (FAISS)
-* tool-call parsing from model outputs
-* OpenTelemetry tracing
-* model-based grading
-* Streamlit dashboard
+• vector retrieval (FAISS)\
+• tool-call parsing from model outputs\
+• OpenTelemetry tracing\
+• model-based grading\
+• distributed evaluation\
+• richer adversarial datasets
 
----
+------------------------------------------------------------------------
 
 # License
 
