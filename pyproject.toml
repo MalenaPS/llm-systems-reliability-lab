@@ -14,6 +14,7 @@ dependencies = [
   "rank-bm25>=0.2.2",
   "numpy>=1.26.0",
   "rich>=13.7.0",
+  "streamlit>=1.33.0",
 ]
 
 [project.optional-dependencies]
