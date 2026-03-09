@@ -55,21 +55,41 @@ reproducible**.
 
 The system evaluates an LLM pipeline as a **System Under Test (SUT)**.
 
-Benchmark Case\
-\|\
-v\
-Evaluation Runner\
-\|\
-v\
-SUT Pipeline\
-(prompt + retrieval + tools)\
-\|\
-v\
-Output Validator\
-(schema + policies)\
-\|\
-v\
-Run Artifacts\
+## Architecture Overview
+
+The system evaluates an LLM pipeline as a **System Under Test (SUT)**.
+
+Benchmark Case  
+
+      |  
+
+      v  
+
+Evaluation Runner  
+
+      |  
+
+      v  
+
+SUT Pipeline  
+
+(prompt + retrieval + 
+tools)  
+
+      |  
+
+      v  
+
+Output Validator  
+
+(schema + policies)  
+
+      |  
+
+      v  
+
+Run Artifacts  
+
 (metrics, events, manifest)
 
 ------------------------------------------------------------------------
