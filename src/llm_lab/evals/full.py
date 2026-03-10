@@ -66,10 +66,7 @@ def run_full_eval(
     agg_metrics: dict[str, float] = {}
     if per_case_metrics:
         numeric_keys = {
-            k
-            for row in per_case_metrics
-            for k, v in row.items()
-            if isinstance(v, (int, float))
+            k for row in per_case_metrics for k, v in row.items() if isinstance(v, (int, float))
         }
         for key in numeric_keys:
             values = [float(row[key]) for row in per_case_metrics if key in row]
@@ -77,15 +74,17 @@ def run_full_eval(
                 agg_metrics[key] = sum(values) / len(values)
 
     if per_case_grades:
-        agg_metrics["llm_score_avg"] = sum(g["score"] for g in per_case_grades) / len(per_case_grades)
-        agg_metrics["llm_helpfulness_avg"] = (
-            sum(g["helpfulness"] for g in per_case_grades) / len(per_case_grades)
+        agg_metrics["llm_score_avg"] = sum(g["score"] for g in per_case_grades) / len(
+            per_case_grades
         )
-        agg_metrics["llm_constraint_adherence_avg"] = (
-            sum(g["constraint_adherence"] for g in per_case_grades) / len(per_case_grades)
+        agg_metrics["llm_helpfulness_avg"] = sum(g["helpfulness"] for g in per_case_grades) / len(
+            per_case_grades
         )
-        agg_metrics["llm_evidence_use_avg"] = (
-            sum(g["evidence_use"] for g in per_case_grades) / len(per_case_grades)
+        agg_metrics["llm_constraint_adherence_avg"] = sum(
+            g["constraint_adherence"] for g in per_case_grades
+        ) / len(per_case_grades)
+        agg_metrics["llm_evidence_use_avg"] = sum(g["evidence_use"] for g in per_case_grades) / len(
+            per_case_grades
         )
 
     (out_dir / "metrics.json").write_text(

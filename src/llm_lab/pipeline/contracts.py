@@ -41,7 +41,8 @@ class ToolResult(BaseModel):
     ok: bool
     result: dict[str, Any] = Field(default_factory=dict)
     error: str | None = None
-    
+
+
 class ToolCallAction(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

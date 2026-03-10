@@ -11,7 +11,6 @@ from llm_lab.pipeline.contracts import (
     ToolCallAction,
 )
 
-
 MODEL_ACTION_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "ModelActionEnvelope",

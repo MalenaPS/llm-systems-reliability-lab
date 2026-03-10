@@ -14,7 +14,9 @@ class ToolCallingMockLLM(LLMAdapter):
     def generate(self, prompt: str) -> str:
         self.calls += 1
         if self.calls == 1:
-            return '{"action":"tool_call","tool_name":"search_kb","args":{"query":"BM25","top_k":3}}'
+            return (
+                '{"action":"tool_call","tool_name":"search_kb","args":{"query":"BM25","top_k":3}}'
+            )
         return '{"action":"final_answer","answer":"BM25 is a ranking function.","insufficient_evidence":false}'
 
 

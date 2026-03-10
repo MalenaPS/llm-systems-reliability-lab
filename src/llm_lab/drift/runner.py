@@ -22,7 +22,9 @@ def _load_cases(path: Path) -> list[Case]:
     rows = [json.loads(line) for line in lines if line.strip()]
     cases: list[Case] = []
     for row in rows:
-        cases.append(Case(case_id=row["case_id"], prompt=row["prompt"], expected=row.get("expected", {})))
+        cases.append(
+            Case(case_id=row["case_id"], prompt=row["prompt"], expected=row.get("expected", {}))
+        )
     return cases
 
 
@@ -138,10 +140,18 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
     answer_hash_stability_rate = same_hash_count / max(1, len(common_cases))
     answer_similarity_avg = sum(similarity_values) / max(1, len(similarity_values))
 
-    schema_delta = per_run_metrics[candidate_id].get("schema_compliance_rate", 0.0) - per_run_metrics[baseline_id].get("schema_compliance_rate", 0.0)
-    tool_success_delta = per_run_metrics[candidate_id].get("tool_success_rate", 0.0) - per_run_metrics[baseline_id].get("tool_success_rate", 0.0)
-    policy_violation_delta = per_run_metrics[candidate_id].get("policy_violation_rate", 0.0) - per_run_metrics[baseline_id].get("policy_violation_rate", 0.0)
-    insufficient_evidence_delta = per_run_metrics[candidate_id].get("insufficient_evidence_rate", 0.0) - per_run_metrics[baseline_id].get("insufficient_evidence_rate", 0.0)
+    schema_delta = per_run_metrics[candidate_id].get(
+        "schema_compliance_rate", 0.0
+    ) - per_run_metrics[baseline_id].get("schema_compliance_rate", 0.0)
+    tool_success_delta = per_run_metrics[candidate_id].get(
+        "tool_success_rate", 0.0
+    ) - per_run_metrics[baseline_id].get("tool_success_rate", 0.0)
+    policy_violation_delta = per_run_metrics[candidate_id].get(
+        "policy_violation_rate", 0.0
+    ) - per_run_metrics[baseline_id].get("policy_violation_rate", 0.0)
+    insufficient_evidence_delta = per_run_metrics[candidate_id].get(
+        "insufficient_evidence_rate", 0.0
+    ) - per_run_metrics[baseline_id].get("insufficient_evidence_rate", 0.0)
 
     drift_report = {
         "suite": "drift",
@@ -195,7 +205,9 @@ def run_drift(matrix_path: Path, runs_dir: Path = Path("runs")) -> Path:
     lines.append("| metric | baseline | candidate | delta |")
     lines.append("|---|---:|---:|---:|")
     for d in drift_report["deltas"]:
-        lines.append(f"| {d['metric']} | {d['baseline']:.3f} | {d['candidate']:.3f} | {d['delta']:.3f} |")
+        lines.append(
+            f"| {d['metric']} | {d['baseline']:.3f} | {d['candidate']:.3f} | {d['delta']:.3f} |"
+        )
 
     markdown_text = "\n".join(lines) + "\n"
     (out_dir / "drift_report.md").write_text(markdown_text, encoding="utf-8")

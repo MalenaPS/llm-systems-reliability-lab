@@ -31,8 +31,7 @@ def _build_grader_prompt(case: Case, output: Output) -> str:
     """
     payload = {
         "instruction": (
-            "You are a strict evaluator. "
-            "Return exactly one JSON object and no surrounding text."
+            "You are a strict evaluator. " "Return exactly one JSON object and no surrounding text."
         ),
         "scale": "All scores must be integers from 1 to 5.",
         "criteria": {
@@ -60,7 +59,7 @@ def _build_grader_prompt(case: Case, output: Output) -> str:
             "helpfulness": 4,
             "constraint_adherence": 5,
             "evidence_use": 4,
-            "reason": "Short justification."
+            "reason": "Short justification.",
         },
     }
     return json.dumps(payload, ensure_ascii=False)

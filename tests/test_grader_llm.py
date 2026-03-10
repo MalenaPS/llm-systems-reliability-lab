@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-
 import jsonschema
 
 from llm_lab.evals.grader_llm import (
@@ -26,7 +24,7 @@ def test_extract_first_json_object_plain_json() -> None:
 
 def test_extract_first_json_object_with_wrapping_text() -> None:
     data = (
-        'Here is the evaluation:\n'
+        "Here is the evaluation:\n"
         '{"score": 4, "helpfulness": 4, "constraint_adherence": 5, "evidence_use": 4, "reason": "Good."}\n'
         "Done."
     )

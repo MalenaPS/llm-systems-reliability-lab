@@ -20,6 +20,7 @@ from llm_lab.pipeline.action_parser import parse_model_action
 from llm_lab.pipeline.contracts import FinalAnswerAction, ToolCallAction
 from llm_lab.observability.report import build_step_metrics
 
+
 def _now_run_id() -> str:
     # stable-ish and unique
     return time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:8]
@@ -123,7 +124,7 @@ class SUTPipeline:
                     success=True,
                     tool_name=model_action.tool_name,
                 )
-                
+
                 second_tool_call = ToolCall(name=model_action.tool_name, args=model_action.args)
                 t1 = time.perf_counter()
                 second_tool_res = self.tools.execute(second_tool_call)
@@ -136,12 +137,14 @@ class SUTPipeline:
                     error_type=second_tool_res.error,
                     tool_name=model_action.tool_name,
                 )
-                
+
                 # Append model-triggered call/result to traces
                 tool_calls = [tool_call, second_tool_call]
                 tool_results = [tool_res, second_tool_res]
 
-                model_tool_data = second_tool_res.result.get("data", []) if second_tool_res.ok else []
+                model_tool_data = (
+                    second_tool_res.result.get("data", []) if second_tool_res.ok else []
+                )
                 if second_tool_res.ok and isinstance(model_tool_data, list) and model_tool_data:
                     evidence = model_tool_data
 
@@ -174,7 +177,10 @@ class SUTPipeline:
                         "insufficient_evidence": final_action.insufficient_evidence,
                     }
                 else:
-                    parsed = {"answer": "Invalid final action from model.", "insufficient_evidence": True}
+                    parsed = {
+                        "answer": "Invalid final action from model.",
+                        "insufficient_evidence": True,
+                    }
 
             else:
                 tool_calls = [tool_call]

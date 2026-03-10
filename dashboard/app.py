@@ -9,7 +9,6 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-
 RUNS_DIR = Path("runs")
 
 
@@ -63,8 +62,12 @@ def load_events(path: Path) -> list[dict[str, Any]]:
 def detect_run_kind(run_dir: Path) -> str:
     has_metrics = (run_dir / "metrics.json").exists()
     has_output = (run_dir / "output.json").exists()
-    has_drift = (run_dir / "drift_report_local.json").exists() or (run_dir / "drift_report.json").exists()
-    has_redteam = (run_dir / "redteam_report.json").exists() or (run_dir / "attack_report.json").exists()
+    has_drift = (run_dir / "drift_report_local.json").exists() or (
+        run_dir / "drift_report.json"
+    ).exists()
+    has_redteam = (run_dir / "redteam_report.json").exists() or (
+        run_dir / "attack_report.json"
+    ).exists()
     has_reliability = (run_dir / "reliability_report.json").exists()
 
     if has_drift:
@@ -139,6 +142,7 @@ def count_runs_by_type(runs: list[Path]) -> dict[str, int]:
 # --------------------------------------------------
 # UI HELPERS
 # --------------------------------------------------
+
 
 def normalize_metric_display(value: Any):
     if value is None:
@@ -261,7 +265,7 @@ def build_markdown_summary(
     redteam: dict | None,
 ) -> str:
     lines = [
-        f"# LLM Reliability Lab Summary",
+        "# LLM Reliability Lab Summary",
         "",
         f"- run_id: `{run_dir.name}`",
         f"- run_type: `{run_kind}`",
@@ -533,14 +537,16 @@ with h1:
     st.caption(run_kind_description(run_kind))
 
 with h2:
-    st.markdown(f"**Backend / Model**")
+    st.markdown("**Backend / Model**")
     st.markdown(f"`{backend}` / `{model}`")
 
 with h3:
     st.markdown("**Type**")
     st.markdown(f"{badge_color} `{run_kind}`")
 
-st.caption("Inspect evaluation, drift, red-team, and reliability artifacts generated under `runs/`.")
+st.caption(
+    "Inspect evaluation, drift, red-team, and reliability artifacts generated under `runs/`."
+)
 
 l1, l2, l3, l4 = st.columns(4)
 l1.metric("Total runs", len(runs))
@@ -560,7 +566,9 @@ with st.expander("Compare two runs", expanded=False):
 
     c1, c2 = st.columns(2)
     compare_a_label = c1.selectbox("Run A", compare_candidates, index=0, key="compare_a")
-    compare_b_label = c2.selectbox("Run B", compare_candidates, index=min(1, len(compare_candidates) - 1), key="compare_b")
+    compare_b_label = c2.selectbox(
+        "Run B", compare_candidates, index=min(1, len(compare_candidates) - 1), key="compare_b"
+    )
 
     compare_a_dir = compare_map[compare_a_label]
     compare_b_dir = compare_map[compare_b_label]
@@ -637,7 +645,9 @@ with tabs["Overview"]:
 
     elif run_kind == "redteam" and redteam:
         s1, s2 = st.columns(2)
-        s1.metric("Attack success rate", normalize_metric_display(redteam.get("attack_success_rate")))
+        s1.metric(
+            "Attack success rate", normalize_metric_display(redteam.get("attack_success_rate"))
+        )
         s2.metric("Number of attacks", redteam.get("n_attacks", "—"))
 
     elif run_kind == "reliability" and reliability:
@@ -679,15 +689,19 @@ with tabs["Overview"]:
             render_metric_card(m2, "Answer similarity", similarity, "answer_similarity_avg")
             render_metric_card(m3, "Hash stability", hash_stability, "answer_hash_stability_rate")
             render_metric_card(m4, "Schema delta", schema_delta, "schema_delta")
-            
+
         elif run_kind == "redteam" and redteam:
             attack_success_rate = redteam.get("attack_success_rate")
             n_attacks = redteam.get("n_attacks")
             blocked = None
-            if isinstance(n_attacks, (int, float)) and isinstance(attack_success_rate, (int, float)):
+            if isinstance(n_attacks, (int, float)) and isinstance(
+                attack_success_rate, (int, float)
+            ):
                 blocked = round(n_attacks * (1 - attack_success_rate), 3)
 
-            render_metric_card(m1, "Attack success rate", attack_success_rate, "attack_success_rate")
+            render_metric_card(
+                m1, "Attack success rate", attack_success_rate, "attack_success_rate"
+            )
             m2.metric("Number of attacks", normalize_metric_display(n_attacks))
             m3.metric("Blocked attacks", normalize_metric_display(blocked))
             m4.metric("Run type", "redteam")
@@ -735,8 +749,12 @@ with tabs["Overview"]:
             st.caption("Derived comparison fields from the drift report.")
 
             dcols = st.columns(2)
-            dcols[0].metric("Hash stability", normalize_metric_display(drift.get("answer_hash_stability_rate")))
-            dcols[1].metric("Answer similarity", normalize_metric_display(drift.get("answer_similarity_avg")))
+            dcols[0].metric(
+                "Hash stability", normalize_metric_display(drift.get("answer_hash_stability_rate"))
+            )
+            dcols[1].metric(
+                "Answer similarity", normalize_metric_display(drift.get("answer_similarity_avg"))
+            )
 
             with st.expander("Open raw drift report summary", expanded=False):
                 st.json(
@@ -755,7 +773,11 @@ with tabs["Overview"]:
             rows = redteam.get("attacks") or redteam.get("results") or []
             if rows:
                 df_red_small = pd.DataFrame(rows)
-                preferred_cols = [c for c in ["attack_id", "attack_success", "reason"] if c in df_red_small.columns]
+                preferred_cols = [
+                    c
+                    for c in ["attack_id", "attack_success", "reason"]
+                    if c in df_red_small.columns
+                ]
                 with st.expander("Open red team sample", expanded=True):
                     st.dataframe(df_red_small[preferred_cols], width="stretch", hide_index=True)
             else:
@@ -859,7 +881,9 @@ if "Events" in tabs:
                 step_options = ["all"]
 
             if "event_type" in df.columns:
-                event_options = ["all"] + sorted(df["event_type"].dropna().astype(str).unique().tolist())
+                event_options = ["all"] + sorted(
+                    df["event_type"].dropna().astype(str).unique().tolist()
+                )
             else:
                 event_options = ["all"]
 
@@ -881,7 +905,9 @@ if "Events" in tabs:
                 df_filtered = df_filtered[df_filtered["step"].astype(str) == selected_step]
 
             if selected_event_type != "all" and "event_type" in df_filtered.columns:
-                df_filtered = df_filtered[df_filtered["event_type"].astype(str) == selected_event_type]
+                df_filtered = df_filtered[
+                    df_filtered["event_type"].astype(str) == selected_event_type
+                ]
 
             if selected_success == "true" and "success" in df_filtered.columns:
                 df_filtered = df_filtered[df_filtered["success"] == True]  # noqa: E712
@@ -913,10 +939,7 @@ if "Events" in tabs:
                 st.divider()
                 st.subheader("Latency by Step")
                 chart = (
-                    df.groupby("step")["latency_ms"]
-                    .mean()
-                    .sort_values(ascending=False)
-                    .round(3)
+                    df.groupby("step")["latency_ms"].mean().sort_values(ascending=False).round(3)
                 )
                 st.bar_chart(chart, width="stretch")
 
