@@ -4,327 +4,262 @@
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 
-Engineering reliable LLM systems: evaluation, adversarial testing,
-behavioral drift monitoring and deterministic pipelines.
+Engineering **reliable LLM systems** through reproducible evaluation, adversarial testing, behavioral drift monitoring and deterministic pipelines.
 
-------------------------------------------------------------------------
+Production-style evaluation framework for testing the **reliability of LLM pipelines**.
 
-## Why this project exists
+---
 
-LLM systems often perform well in demos but fail in production
-environments.
+# TL;DR
+
+This repository provides a **laboratory for evaluating the reliability of LLM pipelines**.
+
+It simulates a realistic LLM system (retrieval + tools + validation) and measures behavior under:
+
+- tool failures
+- schema violations
+- prompt injection attacks
+- behavioral drift between models
+- retry and recovery policies
+
+The goal is to make **LLM system reliability measurable and reproducible**.
+
+---
+
+# Why this project exists
+
+LLM systems often perform well in demos but fail in production environments.
 
 Typical failure modes include:
 
-• tool calls that fail or return malformed outputs\
-• outputs that break JSON contracts\
-• prompt injection attacks and tool hijacking\
-• behavioral drift between model versions\
-• lack of reproducible execution artifacts
+- malformed tool outputs
+- schema-breaking responses
+- prompt injection attacks
+- tool hijacking
+- behavioral drift between model versions
+- lack of reproducible evaluation
 
-This repository provides a **reproducible laboratory for evaluating LLM
-system reliability**.
+This project provides a **controlled environment to test those failures systematically**.
 
-It simulates a realistic LLM pipeline (RAG + tools + guardrails) and
-measures how it behaves under:
+---
 
-• failures\
-• adversarial attacks\
-• model changes
+# Key Capabilities
 
-The goal is to make **LLM reliability measurable, testable, and
-reproducible**.
+The framework provides:
 
-------------------------------------------------------------------------
+- contract-first LLM pipelines using strict JSON schemas
+- tool-calling robustness evaluation
+- fault injection for tool failures
+- retry and recovery policy testing
+- adversarial prompt testing (red teaming)
+- behavioral drift monitoring across models
+- deterministic execution manifests
+- structured artifacts for inspection and reproducibility
 
-## What this project provides
+---
 
-• Contract-first LLM pipelines (strict JSON schemas)\
-• Tool-calling robustness evaluation\
-• Fault injection for tool failures\
-• Retry / recovery policies\
-• Red-team adversarial prompt testing\
-• Model behavior drift monitoring\
-• Deterministic execution manifests\
-• Structured run artifacts and metrics\
-• Fully reproducible local experiments
+# System Architecture
 
-------------------------------------------------------------------------
+```mermaid
+flowchart LR
 
-## Architecture Overview
+A[Benchmark Cases] --> B[Evaluation Runner]
+B --> C[SUT Pipeline]
 
-The system evaluates an LLM pipeline as a **System Under Test (SUT)**.
+C --> D[Prompt Builder]
+C --> E[Retriever]
+C --> F[Tools]
 
-## Architecture Overview
+F --> G[Tool Executor]
 
-The system evaluates an LLM pipeline as a **System Under Test (SUT)**.
+C --> H[Output Validator]
 
-Benchmark Case  
+H --> I[Schema Validation]
+H --> J[Policy Guardrails]
 
-      |  
+H --> K[Run Artifacts]
 
-      v  
+K --> L[Metrics]
+K --> M[Events Log]
+K --> N[Execution Manifest]
+```
 
-Evaluation Runner  
+---
 
-      |  
+# Quickstart
 
-      v  
+Run the deterministic demo pipeline.
 
-SUT Pipeline  
-
-(prompt + retrieval + 
-tools)  
-
-      |  
-
-      v  
-
-Output Validator  
-
-(schema + policies)  
-
-      |  
-
-      v  
-
-Run Artifacts  
-
-(metrics, events, manifest)
-
-------------------------------------------------------------------------
-
-## Quickstart
-
-Run the deterministic demo pipeline:
-
-``` bash
+```bash
 python -m llm_lab.cli demo --backend mock
 ```
 
+Artifacts are stored in:
+
+runs/<timestamp>/
+
+Example structure:
+
+runs/<timestamp>/
+  output.json
+  metrics.json
+  events.jsonl
+  run_manifest.json
+
 Example output:
 
-    schema_compliance_rate: 1.0
-    tool_success_rate: 1.0
-    success_rate: 1.0
+schema_compliance_rate: 1.0
+tool_success_rate: 1.0
+success_rate: 1.0
 
-Artifacts will appear in:
+---
 
-    runs/<timestamp>/
+# Running Evaluations
 
-Example artifacts:
+## Reliability Evaluation
 
-    runs/<timestamp>/
-      output.json
-      metrics.json
-      events.jsonl
-      run_manifest.json
-
-------------------------------------------------------------------------
-
-## Running evaluations
-
-### Reliability suite
-
-Simulates tool failures and evaluates recovery behavior.
-
-``` bash
-python -m llm_lab.cli eval --suite reliability \
-  --fault-matrix configs/fault_matrix.yaml
+```bash
+python -m llm_lab.cli eval --suite reliability
 ```
 
-Metrics produced:
+## Red‑Team Evaluation
 
-• tool_success_rate\
-• tool_retry_rate\
-• recovery_rate\
-• schema_compliance_rate
-
-Artifacts:
-
-    reliability_report.json
-    metrics.json
-
-------------------------------------------------------------------------
-
-### Red Team testing
-
-Runs adversarial prompt injection attacks.
-
-``` bash
-python -m llm_lab.cli redteam --backend mock
+```bash
+python -m llm_lab.cli redteam
 ```
 
-Example result:
+## Drift Evaluation
 
-    attack_success_rate: 0.0
-
-Security guardrails detect leaks such as:
-
-    LEAKED:
-
-------------------------------------------------------------------------
-
-### Drift observatory
-
-Compare behavior across model versions.
-
-``` bash
-python -m llm_lab.cli drift \
-  --matrix configs/drift_matrix.yaml
+```bash
+python -m llm_lab.cli drift --matrix configs/drift_matrix.yaml
 ```
 
-Produces:
+---
 
-    drift_report.json
-    drift_report.md
+# End‑to‑End Example
 
-Example metrics:
+## Input Case
 
-• drift_score\
-• answer_hash_stability_rate\
-• metric deltas across models
+```json
+{
+  "question": "What is the capital of France?",
+  "expected_answer": "Paris"
+}
+```
 
-------------------------------------------------------------------------
+## Pipeline Execution
 
-## Example Metrics
+```bash
+python -m llm_lab.cli demo --backend mock
+```
 
-Example `metrics.json`:
+## Output
 
-``` json
+```json
+{
+  "answer": "Paris",
+  "citations": ["wiki_france"],
+  "tool_calls": []
+}
+```
+
+## Metrics
+
+```json
 {
   "schema_compliance_rate": 1.0,
   "tool_success_rate": 1.0,
-  "policy_violation_rate": 0.0,
-  "insufficient_evidence_rate": 0.0,
-  "success_rate": 1.0,
-  "citations_valid_rate": 1.0
+  "success_rate": 1.0
 }
 ```
 
-Example `drift_report.json`:
+---
 
-``` json
-{
-  "drift_score": 0.5,
-  "answer_hash_stability_rate": 0.0
-}
+# Observability
+
+Artifacts generated per run:
+
+| Artifact | Purpose |
+|--------|--------|
+| metrics.json | reliability metrics |
+| events.jsonl | execution trace |
+| output.json | final model output |
+| run_manifest.json | reproducibility metadata |
+
+---
+
+# Reliability Metrics
+
+| Metric | Description |
+|------|------|
+| schema_compliance_rate | % outputs valid against JSON schema |
+| tool_success_rate | successful tool executions |
+| recovery_rate | failures recovered via retry |
+| attack_success_rate | adversarial prompts bypassing defenses |
+| drift_score | behavioral change between models |
+| answer_hash_stability_rate | stability of generated answers |
+
+---
+
+# Execution Modes
+
+## Deterministic CI Mode
+
+Backend: mock
+
+Used for automated testing.
+
+## Local Real Mode
+
+Backend example: ollama
+
+```bash
+python -m llm_lab.cli demo --backend ollama --model qwen2.5:7b-instruct
 ```
 
-------------------------------------------------------------------------
+---
 
-## Reliability Metrics
+# Positioning in the LLM Evaluation Ecosystem
 
-  Metric                       Description
-  ---------------------------- ------------------------------------------
-  schema_compliance_rate       \% outputs valid JSON
-  tool_success_rate            successful tool executions
-  recovery_rate                failures recovered via retry
-  attack_success_rate          adversarial prompts that bypass defenses
-  drift_score                  behavioral change between models
-  answer_hash_stability_rate   behavioral stability
+| Project | Focus |
+|------|------|
+| OpenAI Evals | model reasoning benchmarks |
+| HELM | holistic model evaluation |
+| Guardrails AI | output validation |
+| LangChain | LLM application framework |
+| LLM Systems Reliability Lab | reliability evaluation of LLM pipelines |
 
-------------------------------------------------------------------------
+---
 
-## Deterministic CI Mode vs Local Real Execution
+# Design Principles
 
-The project supports two execution modes.
+- contract-first outputs
+- deterministic execution
+- observable pipelines
+- failure-aware design
+- reproducible evaluation
 
-### Mode A --- Deterministic CI Mode
+---
 
-Used for reproducible testing.
+# Repository Structure
 
-Backend:
+src/
+  llm_lab/
+    pipeline/
+    tools/
+    retrieval/
+    llm/
+    drift/
+    redteam/
+    evals/
 
-    mock
+configs/
+data/
+tests/
+runs/
+docs/
 
-Characteristics:
-
-• deterministic outputs\
-• fast execution\
-• CI-compatible
-
-Typical commands:
-
-    python -m pytest
-    python -m llm_lab.cli demo --backend mock
-    python -m llm_lab.cli eval --suite reliability --backend mock
-
-------------------------------------------------------------------------
-
-### Mode B --- Local Real Mode
-
-Used for real model experimentation.
-
-Backend:
-
-    ollama
-
-Example:
-
-    python -m llm_lab.cli demo --backend ollama --model qwen2.5:7b-instruct
-    python -m llm_lab.cli drift --matrix configs/drift_matrix_local.yaml
-
-Characteristics:
-
-• real model inference\
-• real latency\
-• real drift observation
-
-------------------------------------------------------------------------
-
-## Design Principles
-
-• Contract-first outputs\
-• Deterministic execution\
-• Observable pipelines\
-• Failure-aware design\
-• Reproducible evaluation
-
-------------------------------------------------------------------------
-
-## Repository Structure
-
-    src/llm_lab
-       pipeline/
-       tools/
-       retrieval/
-       llm/
-       drift/
-       redteam/
-       evals/
-
-    configs/
-    data/
-    tests/
-    runs/
-    docs/
-
-------------------------------------------------------------------------
-
-## CI
-
-GitHub Actions runs:
-
-• ruff\
-• black\
-• pytest\
-• reliability smoke tests
-
-------------------------------------------------------------------------
-
-## Roadmap
-
-Future improvements:
-
-• vector retrieval (FAISS)\
-• tool-call parsing from model outputs\
-• OpenTelemetry tracing\
-• model-based grading\
-• distributed evaluation\
-• richer adversarial datasets
-
-------------------------------------------------------------------------
+---
 
 # License
 
@@ -333,7 +268,5 @@ Apache License 2.0
 Copyright (c) 2026 Malena Pérez Sevilla
 
 Licensed under the Apache License, Version 2.0.
-
-You may obtain a copy of the License at:
 
 http://www.apache.org/licenses/LICENSE-2.0
