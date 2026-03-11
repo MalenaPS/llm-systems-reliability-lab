@@ -2,7 +2,7 @@
 
 This document describes the **failure modes that the LLM Systems Reliability Lab is designed to detect and measure**.
 
-Unlike typical LLM demos, this repository explicitly models failure conditions so that system reliability can be evaluated in a controlled and reproducible way.
+This repository explicitly models failure conditions so that **LLM system reliability can be evaluated under controlled experimental conditions**.
 
 Failure modes are detected through:
 
@@ -15,9 +15,11 @@ Each failure type contributes to the reliability metrics generated during evalua
 
 ---
 
-# Failure Categories
+## Failure Categories
 
 The system groups failures into four main categories.
+
+The evaluation framework classifies failures into four major categories.
 
 | Category | Description |
 |------|------|
@@ -30,11 +32,11 @@ These categories represent the most common failure surfaces in production LLM sy
 
 ---
 
-# Tool Failures
+## Tool Failures
 
-Tool calls are a major reliability risk because they involve external systems.
+Tool calls are a major reliability risk because they involve interaction with external systems that may fail or return unexpected responses.
 
-## Examples
+##1# Examples
 
 - transient tool failure
 - permanent tool failure
@@ -42,7 +44,7 @@ Tool calls are a major reliability risk because they involve external systems.
 - timeout during tool execution
 - incorrect tool arguments
 
-## Reliability Impact
+### Reliability Impact
 
 Tool failures affect metrics such as:
 
@@ -60,11 +62,11 @@ events.jsonl
 
 ---
 
-# LLM Failures
+## LLM Failures
 
-These failures occur when the model produces outputs that violate system contracts or expected behaviour.
+These failures occur when the model produces outputs that violate system output contracts or expected behavioural constraints
 
-## Examples
+### Examples
 
 - schema-breaking outputs
 - hallucinated citations
@@ -72,7 +74,7 @@ These failures occur when the model produces outputs that violate system contrac
 - invalid JSON responses
 - policy violations
 
-## Detection
+### Detection
 
 LLM failures are detected through:
 
@@ -80,7 +82,7 @@ LLM failures are detected through:
 - output contract checks
 - policy validation rules
 
-## Reliability Impact
+### Reliability Impact
 
 Relevant metrics include:
 
@@ -91,13 +93,13 @@ Relevant metrics include:
 
 ---
 
-# Adversarial Failures
+## Adversarial Failures
 
 Adversarial failures occur when malicious prompts successfully manipulate system behaviour.
 
-These are tested through the **red-team evaluation suite**.
+These failures are evaluated using the repository's red-team evaluation suite.
 
-## Examples
+### Examples
 
 - prompt injection
 - system prompt leakage
@@ -114,7 +116,7 @@ Example attack:
 }
 ```
 
-## Metrics
+### Metrics
 
 Adversarial evaluation produces metrics such as:
 
@@ -127,20 +129,20 @@ Low attack success rates indicate stronger system robustness.
 
 ---
 
-# Drift Failures
+## Drift Failures
 
 LLM behaviour can change when switching models or upgrading model versions.
 
-The repository includes a **drift observatory** to detect these changes.
+The repository includes a **drift observatory** to detect reliability regressions or behavioural changes across models.
 
-## Examples
+### Examples
 
 - change in tool usage patterns
 - schema compliance degradation
 - policy adherence degradation
 - variation in generated answers
 
-## Detection
+### Detection
 
 Drift failures are detected by comparing evaluation results across models.
 
@@ -159,9 +161,10 @@ High drift may indicate:
 
 ---
 
-# Failure Recording
+## Failure Recording
 
-Every failure detected during evaluation is recorded in the run artifacts.
+Every failure detected during evaluation is recorded in structured run
+artifacts.
 
 Typical logs include:
 
@@ -179,7 +182,7 @@ These artifacts enable:
 
 ---
 
-# Why Failure Modeling Matters
+## Why Failure Modeling Matters
 
 Many LLM repositories measure **accuracy only**.
 
@@ -190,4 +193,4 @@ However, real-world systems fail in more complex ways:
 - prompts may attack the system
 - models may drift over time
 
-This repository explicitly models these conditions so that **LLM system reliability can be evaluated systematically**.
+This repository explicitly models these conditions so that **LLM system reliability can be evaluated systematically rather than relying solely on model accuracy metrics**.

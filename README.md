@@ -6,11 +6,11 @@
 
 Engineering **reliable LLM systems** through reproducible evaluation, adversarial testing, behavioral drift monitoring and deterministic pipelines.
 
-Production-style evaluation framework for testing the **reliability of LLM pipelines**.
+A production-style evaluation framework for testing the reliability of LLM pipelines.
 
 ---
 
-# TL;DR
+## TL;DR
 
 This repository provides a **laboratory for evaluating the reliability of LLM pipelines**.
 
@@ -26,7 +26,7 @@ The goal is to make **LLM system reliability measurable and reproducible**.
 
 ---
 
-# Why this project exists
+## Why this project exists
 
 LLM systems often perform well in demos but fail in production environments.
 
@@ -43,7 +43,7 @@ This project provides a **controlled environment to test those failures systemat
 
 ---
 
-# Key Capabilities
+## Key Capabilities
 
 The framework provides:
 
@@ -58,7 +58,7 @@ The framework provides:
 
 ---
 
-# System Architecture
+## System Architecture
 
 ```mermaid
 flowchart LR
@@ -84,9 +84,14 @@ K --> M[Events Log]
 K --> N[Execution Manifest]
 ```
 
+More details in:
+
+- docs/architecture.md
+- docs/contracts.md
+
 ---
 
-# Quickstart
+## Quickstart
 
 Run the deterministic demo pipeline.
 
@@ -114,31 +119,35 @@ success_rate: 1.0
 
 ---
 
-# Running Evaluations
+## Running Evaluations
 
-## Reliability Evaluation
+### Reliability Evaluation
 
 ```bash
 python -m llm_lab.cli eval --suite reliability
 ```
 
-## Red‑Team Evaluation
+### Red‑Team Evaluation
 
 ```bash
 python -m llm_lab.cli redteam
 ```
 
-## Drift Evaluation
+### Drift Evaluation
 
 ```bash
 python -m llm_lab.cli drift --matrix configs/drift_matrix.yaml
 ```
 
+Full methodology in:
+
+- docs/evaluation.md
+
 ---
 
 # End‑to‑End Example
 
-## Input Case
+### Input Case
 
 ```json
 {
@@ -147,13 +156,13 @@ python -m llm_lab.cli drift --matrix configs/drift_matrix.yaml
 }
 ```
 
-## Pipeline Execution
+### Pipeline Execution
 
 ```bash
 python -m llm_lab.cli demo --backend mock
 ```
 
-## Output
+### Output
 
 ```json
 {
@@ -163,7 +172,7 @@ python -m llm_lab.cli demo --backend mock
 }
 ```
 
-## Metrics
+### Metrics
 
 ```json
 {
@@ -175,7 +184,7 @@ python -m llm_lab.cli demo --backend mock
 
 ---
 
-# Observability
+## Observability
 
 Artifacts generated per run:
 
@@ -185,6 +194,10 @@ Artifacts generated per run:
 | events.jsonl | execution trace |
 | output.json | final model output |
 | run_manifest.json | reproducibility metadata |
+
+Reproducibility details:
+
+- docs/reproducibility.md
 
 ---
 
@@ -201,15 +214,15 @@ Artifacts generated per run:
 
 ---
 
-# Execution Modes
+## Execution Modes
 
-## Deterministic CI Mode
+### Deterministic CI Mode
 
 Backend: mock
 
 Used for automated testing.
 
-## Local Real Mode
+### Local Real Mode
 
 Backend example: ollama
 
@@ -219,7 +232,7 @@ python -m llm_lab.cli demo --backend ollama --model qwen2.5:7b-instruct
 
 ---
 
-# Positioning in the LLM Evaluation Ecosystem
+## Positioning in the LLM Evaluation Ecosystem
 
 | Project | Focus |
 |------|------|
@@ -231,7 +244,7 @@ python -m llm_lab.cli demo --backend ollama --model qwen2.5:7b-instruct
 
 ---
 
-# Design Principles
+## Design Principles
 
 - contract-first outputs
 - deterministic execution
@@ -241,27 +254,43 @@ python -m llm_lab.cli demo --backend ollama --model qwen2.5:7b-instruct
 
 ---
 
-# Repository Structure
+## Repository Structure
 
-src/
-  llm_lab/
-    pipeline/
-    tools/
-    retrieval/
-    llm/
-    drift/
-    redteam/
-    evals/
+src/llm_lab
+  pipeline/      pipeline orchestration
+  tools/         tool schemas and execution
+  retrieval/     contextual retrieval
+  llm/           model backends
+  evals/         evaluation logic
+  redteam/       adversarial testing
+  drift/         model drift analysis
 
-configs/
-data/
-tests/
-runs/
-docs/
+configs/         pipeline configuration
+data/            benchmark datasets
+tests/           unit tests
+runs/            generated artifacts
+docs/            technical documentation
 
 ---
 
-# License
+## Technical Documentation
+
+- docs/architecture.md
+- docs/contracts.md
+- docs/evaluation.md
+- docs/failure_modes.md
+- docs/reproducibility.md
+- docs/design_decision.md
+- docs/development.md
+
+## Limitations
+
+- Mock mode guarantees deterministic execution but does not represent real model quality.
+- Model-based grading introduces subjective evaluation signals.
+- Drift measurements depend on the selected benchmark cases.
+- This framework evaluates pipeline reliability, not general LLM capability.
+
+## License
 
 Apache License 2.0
 

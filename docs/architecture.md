@@ -9,9 +9,9 @@ systems under controlled and reproducible conditions, including schema
 compliance, tool robustness, adversarial resistance, and behavioral
 drift.
 
-------------------------------------------------------------------------
+---
 
-# System Overview
+## System Overview
 
 At a high level, the repository separates the system into two layers:
 
@@ -39,9 +39,9 @@ This separation is critical because the goal of the repository is **not
 only to run an LLM pipeline, but to evaluate its reliability under
 controlled conditions**.
 
-------------------------------------------------------------------------
+---
 
-# High-Level Flow
+## High-Level Flow
 
 ``` mermaid
 flowchart LR
@@ -68,11 +68,11 @@ I --> L[Run Manifest]
 I --> M[Reports]
 ```
 
-------------------------------------------------------------------------
+---
 
-# Main Components
+## Main Components
 
-## Benchmark Cases
+### Benchmark Cases
 
 Benchmark cases define the tasks used to evaluate the pipeline.
 
@@ -85,9 +85,9 @@ Typical responsibilities:
 These cases are loaded by the evaluation runner and executed against the
 pipeline.
 
-------------------------------------------------------------------------
+---
 
-## Evaluation Runner
+### Evaluation Runner
 
 The evaluation runner orchestrates the experiment lifecycle.
 
@@ -102,13 +102,13 @@ Responsibilities:
 This layer transforms the project from a demo pipeline into a
 **reliability evaluation framework**.
 
-------------------------------------------------------------------------
+---
 
-## SUT Pipeline
+### SUT Pipeline
 
 The **System Under Test (SUT)** represents the LLM application pipeline.
 
-It typically includes:
+The SUT pipeline includes the core stages of an LLM application:
 
 -   prompt construction
 -   retrieval
@@ -124,9 +124,9 @@ Key modules include:
 
 pipeline/ tools/ retrieval/ llm/ drift/ redteam/ evals/
 
-------------------------------------------------------------------------
+---
 
-## Retriever
+### Retriever
 
 The retriever provides contextual information before generation.
 
@@ -139,9 +139,9 @@ Retrieval affects:
 -   answer stability
 -   evidence usage
 
-------------------------------------------------------------------------
+---
 
-## Tool Layer
+### Tool Layer
 
 The tool layer simulates external operations that the LLM may call.
 
@@ -157,13 +157,13 @@ Typical failure modes include:
 The evaluation framework explicitly measures system behavior under these
 failures.
 
-------------------------------------------------------------------------
+---
 
-## LLM Backend
+### LLM Backend
 
 The system supports two execution modes.
 
-### Deterministic CI Mode
+#### Deterministic CI Mode
 
 Uses a mock backend.
 
@@ -173,7 +173,7 @@ Characteristics:
 -   reproducible tests
 -   CI stability
 
-### Local Real Execution Mode
+#### Local Real Execution Mode
 
 Uses real model backends (e.g. Ollama).
 
@@ -186,9 +186,9 @@ Characteristics:
 This design ensures CI stability while still allowing realistic
 experimentation.
 
-------------------------------------------------------------------------
+---
 
-## Output Validator
+### Output Validator
 
 The output validator enforces structural constraints.
 
@@ -202,18 +202,36 @@ Typical checks include:
 This reflects the **contract-first design** used throughout the
 repository.
 
-------------------------------------------------------------------------
+---
 
-# Run Artifacts
+## Execution Flow
+
+A typical execution proceeds through the following steps:
+
+1. The evaluation runner loads a benchmark case.
+2. The SUT pipeline builds the prompt and retrieves context.
+3. Tool calls may be generated and executed through the tool layer.
+4. The selected LLM backend generates a structured response.
+5. The output validator checks schema compliance and policy constraints.
+6. Reliability metrics are computed from the execution.
+7. Execution events are appended to `events.jsonl`.
+8. The run manifest is written to `run_manifest.json`.
+9. Reports and metrics are stored in the run directory.
+
+This flow ensures that every pipeline execution is observable and reproducible.
+
+---
+
+## Run Artifacts
 
 Each execution generates structured artifacts.
 
 Typical artifacts include:
 
-output.json\
-metrics.json\
-events.jsonl\
-run_manifest.json
+- `output.json`
+- `metrics.json`
+- `events.jsonl`
+- `run_manifest.json`
 
 Additional reports may include:
 
@@ -228,45 +246,57 @@ These artifacts support:
 -   regression detection
 -   comparison between models
 
-------------------------------------------------------------------------
+---
 
-# Repository Mapping
+## Repository Mapping
 
 The architecture directly maps to the repository structure.
 
-src/ llm_lab/ pipeline/ tools/ retrieval/ llm/ drift/ redteam/ evals/
+src/
+  llm_lab/
+    pipeline/    pipeline orchestration
+    tools/       tool schemas and execution
+    retrieval/   contextual retrieval
+    llm/         model backends
+    evals/       evaluation logic
+    redteam/     adversarial testing
+    drift/       model drift analysis
 
-configs/ data/ tests/ docs/ runs/
+configs/         pipeline configuration
+data/            benchmark datasets
+tests/           unit tests
+docs/            technical documentation
+runs/            generated artifacts
 
-------------------------------------------------------------------------
+---
 
-# Architectural Principles
+## Architectural Principles
 
 The system follows several engineering principles:
 
-Contract-First Outputs
+### Contract-First Outputs
 
-Outputs must follow machine-checkable schemas.
+Outputs must follow machine-checkable schemas to guarantee structural validity and enable automated evaluation.
 
-Deterministic Evaluation
+### Deterministic Evaluation
 
-CI runs must produce reproducible results.
+CI runs must produce reproducible results using a deterministic backend.
 
-Artifact-Based Observability
+### Artifact-Based Observability
 
-Every run generates artifacts for debugging and analysis.
+Each pipeline execution generates artifacts that allow debugging, auditing and experiment comparison.
 
-Failure-Aware Design
+### Failure-Aware Design
 
-Failure modes are simulated and measured explicitly.
+Failure modes such as tool errors and schema violations are explicitly simulated and measured.
 
-Pipeline/Evaluation Separation
+### Pipeline/Evaluation Separation
 
-The evaluation harness is independent from the SUT pipeline.
+The evaluation harness remains independent from the SUT pipeline to ensure unbiased reliability measurement.
 
-------------------------------------------------------------------------
+---
 
-# Why this Architecture Matters
+## Why this Architecture Matters
 
 Many LLM repositories demonstrate working pipelines.
 

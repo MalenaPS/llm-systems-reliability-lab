@@ -2,7 +2,11 @@
 
 This document explains the **key architectural decisions and trade-offs** behind the design of **LLM Systems Reliability Lab**.
 
-The repository is intentionally designed as a **reliability evaluation framework for LLM systems**, rather than a simple LLM demo. Many of the architectural choices prioritize:
+The repository is intentionally designed as a **reliability evaluation
+framework for LLM systems**, rather than a traditional LLM application
+demo.
+
+Many architectural decisions therefore prioritize:
 
 - reproducibility
 - observability
@@ -13,11 +17,11 @@ These goals influence how the pipeline is structured and how experiments are exe
 
 ---
 
-# Contract-First Outputs
+## Contract-First Outputs
 
 The system enforces **strict JSON schema validation** for all pipeline outputs.
 
-## Rationale
+### Rationale
 
 LLM outputs are typically free-form text, which can cause issues when integrated into downstream systems.
 
@@ -28,9 +32,11 @@ Using structured contracts ensures that:
 - evaluation metrics can be computed deterministically
 - downstream components receive consistent data
 
-This design allows the pipeline to be evaluated as a **machine-checkable system**, not just a text generator.
+This design allows the pipeline to be evaluated as a **machine-checkable
+system**, enabling automated reliability metrics such as schema
+compliance and policy validation.
 
-## Trade-offs
+### Trade-offs
 
 - prompt design becomes more complex
 - the model must be guided to produce schema-compliant responses
@@ -40,11 +46,11 @@ However, these trade-offs are necessary to build **reliable production systems**
 
 ---
 
-# Deterministic CI Backend
+## Deterministic CI Backend
 
 The repository uses a **mock LLM backend for CI execution**.
 
-## Rationale
+### Rationale
 
 Real LLM outputs are inherently non-deterministic and may change across model updates. Using a mock backend ensures:
 
@@ -54,7 +60,7 @@ Real LLM outputs are inherently non-deterministic and may change across model up
 
 This approach allows automated tests to verify pipeline behaviour without relying on external model APIs.
 
-## Trade-offs
+### Trade-offs
 
 - CI does not evaluate real model quality
 - behaviour in CI may differ from real-model runs
@@ -63,7 +69,7 @@ To address this, the repository supports **local execution with real models**.
 
 ---
 
-# Artifact-Based Observability
+## Artifact-Based Observability
 
 Every pipeline execution produces structured artifacts.
 
@@ -76,7 +82,7 @@ events.jsonl
 run_manifest.json
 ```
 
-## Rationale
+### Rationale
 
 Artifact-based observability enables:
 
@@ -85,9 +91,10 @@ Artifact-based observability enables:
 - debugging of reliability failures
 - historical run analysis
 
-Instead of relying only on logs, the system stores **machine-readable artifacts** describing each run.
+Instead of relying only on logs, the system stores **machine-readable
+execution artifacts** that describe each pipeline run.
 
-## Trade-offs
+### Trade-offs
 
 - additional disk usage
 - slightly increased implementation complexity
@@ -96,11 +103,11 @@ However, this approach greatly improves **debuggability and traceability**.
 
 ---
 
-# Evaluation Harness Separation
+## Evaluation Harness Separation
 
 The architecture separates the **evaluation harness** from the **System Under Test (SUT)**.
 
-## Rationale
+### Rationale
 
 This separation allows:
 
@@ -108,7 +115,7 @@ This separation allows:
 - failure injection without modifying the pipeline
 - reproducible benchmarking across models
 
-Evaluation suites include:
+The evaluation harness orchestrates several evaluation suites, including:
 
 - reliability testing
 - red-team adversarial evaluation
@@ -116,7 +123,7 @@ Evaluation suites include:
 
 By isolating the evaluation layer, the framework can simulate realistic reliability conditions.
 
-## Trade-offs
+### Trade-offs
 
 - slightly more complex architecture
 - additional orchestration code
@@ -125,7 +132,7 @@ Despite this, the separation significantly improves **experimental flexibility**
 
 ---
 
-# Failure-Oriented Design
+## Failure-Oriented Design
 
 The repository explicitly models failure scenarios.
 
@@ -136,7 +143,7 @@ Examples include:
 - adversarial prompt attacks
 - behavioural drift across models
 
-## Rationale
+### Rationale
 
 Traditional benchmarks measure **model capability**, but real-world systems fail in more complex ways.
 
@@ -150,9 +157,10 @@ This approach aligns the repository with **production reliability engineering pr
 
 ---
 
-# Deterministic Artifacts for Experiment Tracking
+## Deterministic Artifacts for Experiment Tracking
 
-Every run generates a **manifest describing the execution context**.
+Every run generates a **manifest describing the execution context and
+experiment configuration**.
 
 Example file:
 
@@ -167,7 +175,7 @@ The manifest records:
 - configuration hashes
 - evaluation metrics
 
-## Rationale
+### Rationale
 
 Recording execution metadata allows experiments to be:
 
@@ -179,7 +187,7 @@ This design makes the repository suitable for **systematic experimentation and r
 
 ---
 
-# Why These Design Choices Matter
+## Why These Design Choices Matter
 
 LLM systems are increasingly deployed in production environments, where reliability requirements are much stricter than in research demos.
 
@@ -190,4 +198,6 @@ The design decisions in this repository prioritize:
 - observable system behaviour
 - reproducible experiments
 
-Together, these principles enable the repository to function as a **laboratory for testing and improving the reliability of LLM systems**.
+Together, these principles enable the repository to function as a
+**controlled laboratory for evaluating and improving the reliability of
+LLM systems**.

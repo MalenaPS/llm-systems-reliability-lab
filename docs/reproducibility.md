@@ -2,7 +2,8 @@
 
 Reproducibility is a core design goal of **LLM Systems Reliability Lab**.
 
-Every evaluation run generates structured artifacts that describe the full execution context. This allows experiments to be inspected, reproduced, and compared across runs, models, and configurations.
+ Every evaluation run generates structured artifacts that describe the
+full execution context of the pipeline. This allows experiments to be inspected, reproduced, and compared across runs, models, and configurations.
 
 Reproducibility enables:
 
@@ -14,9 +15,9 @@ Reproducibility enables:
 
 ---
 
-# Reproducible Execution
+## Reproducible Execution
 
-Each run generates a **run manifest** that captures the execution environment.
+Each run generates a **run manifest** that captures the execution environment and evaluation configuration.
 
 File:
 
@@ -46,9 +47,9 @@ This manifest ensures that the **exact execution context** of a run can be recon
 
 ---
 
-# Deterministic CI Mode
+## Deterministic CI Mode
 
-Continuous integration runs the pipeline in **deterministic mode** using a mock backend.
+Continuous integration executes the pipeline in **deterministic mode**using a mock backend.
 
 Characteristics:
 
@@ -68,9 +69,9 @@ Deterministic mode ensures that automated tests remain stable and reproducible.
 
 ---
 
-# Local Experimentation Mode
+## Local Experimentation Mode
 
-Local runs may use real model backends.
+Local runs can use real model backends for experimentation.
 
 Example:
 
@@ -88,9 +89,9 @@ However, real-model runs may produce **non-deterministic outputs**, which is exp
 
 ---
 
-# Run Artifacts
+## Run Artifacts
 
-Each run produces a structured directory containing all artifacts.
+Each run produces a structured directory containing all execution artifacts.
 
 Typical structure:
 
@@ -114,7 +115,7 @@ These artifacts enable full inspection of the pipeline execution.
 
 ---
 
-# Configuration Traceability
+## Configuration Traceability
 
 The manifest records hashes for configuration and prompt inputs.
 
@@ -131,11 +132,11 @@ This prevents ambiguity when comparing experiments.
 
 ---
 
-# Dataset Reproducibility
+## Dataset Reproducibility
 
 Evaluation runs reference deterministic datasets.
 
-Typical datasets include:
+Typical evaluation datasets include:
 
 ```
 cases.jsonl
@@ -146,9 +147,9 @@ Because datasets are version-controlled, the same evaluation can be reproduced a
 
 ---
 
-# Debugging Historical Runs
+## Debugging Historical Runs
 
-Run artifacts allow engineers to reconstruct the full execution flow.
+Run artifacts allow engineers to reconstruct the full pipeline execution flow.
 
 For example:
 
@@ -160,13 +161,13 @@ This capability is critical for diagnosing reliability failures.
 
 ---
 
-# Reproducibility Principles
+## Reproducibility Principles
 
 The repository follows several principles to maintain reproducibility:
 
 **Deterministic CI evaluation**
 
-CI runs use mock backends to guarantee stable results.
+CI runs use mock backends to guarantee deterministic and stable results.
 
 **Artifact-based experiment tracking**
 
@@ -182,7 +183,7 @@ All important execution parameters are recorded.
 
 ---
 
-# Why Reproducibility Matters
+## Why Reproducibility Matters
 
 LLM systems are inherently probabilistic.
 
@@ -192,4 +193,4 @@ Without careful experiment tracking it becomes difficult to:
 - diagnose regressions
 - compare model versions
 
-This repository addresses this by treating **every run as a reproducible experiment**, ensuring that reliability results can always be inspected and replicated.
+This repository addresses this by treating **every run as a reproducible experiment**, ensuring that reliability results can always be inspected, reproduced, and compared across experiments.

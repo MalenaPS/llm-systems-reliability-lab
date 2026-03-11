@@ -11,7 +11,7 @@ The goal of the repository is to provide a reproducible laboratory for testing *
 
 ---
 
-# Repository Overview
+## Repository Overview
 
 Key directories in the repository:
 
@@ -32,19 +32,20 @@ src/llm_lab/
 
 which contains modules such as:
 
-- pipeline
-- tools
-- retrieval
-- llm
-- drift
-- redteam
-- evals
+- `pipeline` – pipeline orchestration and execution logic
+- `tools` – tool schemas and execution layer
+- `retrieval` – contextual retrieval components
+- `llm` – model backend implementations
+- `drift` – behavioural drift evaluation
+- `redteam` – adversarial prompt testing
+- `evals` – evaluation runners and metrics
 
 ---
 
-# Development Environment Setup
+## Development Environment Setup
 
-Install the project and development dependencies.
+The setup script creates a Python environment and installs both runtime
+and development dependencies required for the repository.
 
 ```
 make setup
@@ -60,7 +61,7 @@ After setup, verify the installation by running the test suite.
 
 ---
 
-# Running Tests
+## Running Tests
 
 Run the full test suite:
 
@@ -75,11 +76,12 @@ Tests validate:
 - evaluation logic
 - deterministic behaviour
 
-Continuous integration runs these tests automatically.
+Continuous integration executes this test suite automatically to ensure
+that pipeline behaviour remains stable across changes.
 
 ---
 
-# Linting and Formatting
+## Linting and Formatting
 
 The repository uses automated code quality tools.
 
@@ -94,17 +96,21 @@ Typical tools include:
 - **ruff** for linting
 - **black** for formatting
 
-Maintaining consistent formatting helps keep the codebase readable and maintainable.
+Maintaining consistent formatting helps keep the codebase readable and
+reduces noise in pull request reviews.
 
 ---
 
-# Running the Demo Pipeline
+## Running the Demo Pipeline
 
 To execute the deterministic demo pipeline:
 
 ```
 python -m llm_lab.cli demo --backend mock
 ```
+
+The `mock` backend produces deterministic responses and is used for CI
+and reproducible local experiments.
 
 This command runs the pipeline in **deterministic mode** and generates run artifacts in:
 
@@ -114,7 +120,7 @@ runs/<timestamp>/
 
 ---
 
-# Running Reliability Evaluation
+## Running Reliability Evaluation
 
 Run the reliability evaluation suite:
 
@@ -124,15 +130,15 @@ python -m llm_lab.cli eval --suite reliability
 
 This simulates tool failures and measures recovery behaviour.
 
-Metrics are written to:
+Metrics are written to the run directory:
 
 ```
-metrics.json
+runs/<timestamp>/metrics.json
 ```
 
 ---
 
-# Running Red-Team Evaluation
+## Running Red-Team Evaluation
 
 Execute adversarial prompt testing:
 
@@ -144,19 +150,20 @@ This evaluates the pipeline against prompt injection and related attacks.
 
 ---
 
-# Running Drift Evaluation
+## Running Drift Evaluation
 
-Compare behaviour across model configurations.
+Compare behaviour across model versions or backend configurations.
 
 ```
 python -m llm_lab.cli drift --matrix configs/drift_matrix.yaml
 ```
 
-Drift reports highlight behavioural changes across models.
+Drift reports highlight behavioural changes between model versions or
+backend configurations.
 
 ---
 
-# Adding New Benchmarks
+## Adding New Benchmarks
 
 Benchmark cases are stored in:
 
@@ -185,7 +192,7 @@ Guidelines for adding cases:
 
 ---
 
-# Adding Adversarial Attacks
+## Adding Adversarial Attacks
 
 Adversarial prompts are stored in:
 
@@ -210,7 +217,7 @@ Attacks should test:
 
 ---
 
-# Debugging Pipeline Runs
+## Debugging Pipeline Runs
 
 All pipeline executions generate structured artifacts.
 
@@ -223,6 +230,9 @@ events.jsonl
 run_manifest.json
 ```
 
+The `events.jsonl` file records the execution trace of the pipeline and
+is particularly useful when diagnosing reliability failures.
+
 These files allow developers to:
 
 - inspect pipeline behaviour
@@ -231,7 +241,7 @@ These files allow developers to:
 
 ---
 
-# Contributing Guidelines
+## Contributing Guidelines
 
 When contributing new features:
 
@@ -240,10 +250,11 @@ When contributing new features:
 3. ensure new features generate observable artifacts
 4. add tests for new functionality
 5. update documentation in `docs/`
+6. ensure that evaluation results remain reproducible
 
 ---
 
-# Development Philosophy
+## Development Philosophy
 
 The repository follows a few core development principles:
 
@@ -261,4 +272,4 @@ Failure conditions should be simulated and measurable.
 
 **Reliable evaluation**
 
-The goal is not only to build LLM pipelines, but to **evaluate their reliability systematically**.
+The goal is not only to build LLM pipelines, but to **evaluate their reliability systematically under controlled experimental conditions**.

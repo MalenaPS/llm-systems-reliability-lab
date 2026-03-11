@@ -2,7 +2,9 @@
 
 This document describes how **LLM Systems Reliability Lab** evaluates the reliability of LLM pipelines.
 
-The goal of the evaluation framework is not only to measure model accuracy, but to assess **system reliability under realistic operational conditions**.
+The goal of the evaluation framework is not only to measure model
+accuracy, but to assess **LLM pipeline reliability under realistic
+operational conditions**.
 
 This includes:
 
@@ -16,9 +18,12 @@ The evaluation framework treats the LLM pipeline as a **System Under Test (SUT)*
 
 ---
 
-# Evaluation Layers
+## Evaluation Layers
 
 The repository evaluates reliability through multiple complementary mechanisms.
+
+The evaluation framework combines deterministic checks and model-based
+analysis to capture different dimensions of system reliability.
 
 | Evaluation Layer | Purpose |
 |------|------|
@@ -31,21 +36,21 @@ These layers provide a comprehensive view of the system's reliability.
 
 ---
 
-# Evaluation Datasets
+## Evaluation Datasets
 
 The evaluation framework relies on structured datasets.
 
-## Benchmark Dataset
+### Benchmark Dataset
 
 File:
 
 ```
-cases.jsonl
+data/cases.jsonl
 ```
 
 Each entry represents a **single evaluation case**.
 
-Typical fields include:
+Typical fields include the following minimal schema:
 
 ```json
 {
@@ -63,7 +68,7 @@ Purpose:
 
 ---
 
-## Adversarial Dataset
+### Adversarial Dataset
 
 File:
 
@@ -91,13 +96,13 @@ Example attack:
 
 The evaluation measures whether the pipeline correctly **rejects or mitigates these attacks**.
 
+These attacks are executed by the red-team evaluation suite.
+
 ---
 
-# Deterministic Evaluation
+## Deterministic Evaluation
 
-Deterministic checks verify structural and behavioural correctness of the pipeline.
-
-These checks are implemented directly in code and do not rely on LLM judgment.
+Deterministic checks verify structural and behavioural correctness of the pipeline without relying on model judgment.
 
 Typical checks include:
 
@@ -116,17 +121,12 @@ Example reliability metrics:
 | recovery_rate | failures recovered through retry |
 | success_rate | cases completed without failure |
 
-These metrics are stored in:
-
-```
-metrics.json
-```
-
-for each run.
+These metrics are stored in `metrics.json` inside the run directory for
+each evaluation execution.
 
 ---
 
-# Model-Based Grading
+## Model-Based Grading
 
 Some aspects of system behaviour cannot be evaluated deterministically.
 
@@ -153,11 +153,13 @@ Model grading results are stored in:
 llm_grades.json
 ```
 
+Model-based grading is optional and primarily used for qualitative evaluation scenarios where deterministic checks are insufficient.
+
 ---
 
-# Adversarial Evaluation
+## Adversarial Evaluation
 
-Red-team evaluation tests the system against adversarial prompts.
+Red-team evaluation tests the system against adversarial prompts that attempt to bypass system safeguards.
 
 Execution command:
 
@@ -181,7 +183,7 @@ These tests help identify vulnerabilities in:
 
 ---
 
-# Drift Evaluation
+## Drift Evaluation
 
 Model behaviour can change across model versions.
 
@@ -193,7 +195,8 @@ Execution command:
 python -m llm_lab.cli drift --matrix configs/drift_matrix.yaml
 ```
 
-Drift evaluation compares metrics across models.
+Drift evaluation compares reliability metrics across multiple model
+configurations or model versions.
 
 Example metrics:
 
@@ -207,9 +210,9 @@ Low drift indicates **stable system behaviour across models**.
 
 ---
 
-# Evaluation Artifacts
+## Evaluation Artifacts
 
-Each evaluation run produces structured artifacts.
+Each evaluation run produces structured artifacts describing the pipeline execution and evaluation results.
 
 Typical outputs include:
 
@@ -232,7 +235,7 @@ These artifacts enable:
 
 ---
 
-# Why System-Level Evaluation Matters
+## Why System-Level Evaluation Matters
 
 Many benchmarks evaluate **model capability**.
 
@@ -245,4 +248,4 @@ That includes questions such as:
 - Does the system resist prompt injection?
 - Does behaviour remain stable across model upgrades?
 
-Evaluating these properties is critical for **deploying LLM systems in production environments**.
+Evaluating these properties is critical for deploying LLM systems in production environments where reliability and safety requirements are strict.
