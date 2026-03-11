@@ -101,21 +101,27 @@ python -m llm_lab.cli demo --backend mock
 
 Artifacts are stored in:
 
+```text
 runs/<timestamp>/
+```
 
 Example structure:
 
+```text
 runs/<timestamp>/
   output.json
   metrics.json
   events.jsonl
   run_manifest.json
+```
 
 Example output:
 
+```text
 schema_compliance_rate: 1.0
 tool_success_rate: 1.0
 success_rate: 1.0
+```
 
 ---
 
@@ -138,9 +144,11 @@ recovery_rate: 1.0
 
 Artifacts generated:
 
+```text
 runs/20260311-122013-a0ede4b3/
   metrics.json
   reliability_report.json
+```
 
 ### Red‑Team Evaluation
 
@@ -271,6 +279,7 @@ python -m llm_lab.cli demo --backend ollama --model qwen2.5:7b-instruct
 
 ## Repository Structure
 
+```text
 src/llm_lab
   pipeline/      pipeline orchestration
   tools/         tool schemas and execution
@@ -285,6 +294,7 @@ data/            benchmark datasets
 tests/           unit tests
 runs/            generated artifacts
 docs/            technical documentation
+```
 
 ---
 
