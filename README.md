@@ -127,6 +127,19 @@ success_rate: 1.0
 python -m llm_lab.cli eval --suite reliability
 ```
 
+Example output from a real evaluation run:
+
+schema_compliance_rate: 1.0
+tool_success_rate: 0.5
+tool_retry_rate: 1.25
+recovery_rate: 1.0
+
+Artifacts generated:
+
+runs/20260311-122013-a0ede4b3/
+  metrics.json
+  reliability_report.json
+
 ### Red‑Team Evaluation
 
 ```bash
