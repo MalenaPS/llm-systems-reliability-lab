@@ -129,10 +129,12 @@ python -m llm_lab.cli eval --suite reliability
 
 Example output from a real evaluation run:
 
+```text
 schema_compliance_rate: 1.0
 tool_success_rate: 0.5
 tool_retry_rate: 1.25
 recovery_rate: 1.0
+```
 
 Artifacts generated:
 
